@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -7,6 +8,8 @@ import 'package:mazon/utils/customCard.dart';
 import './restaurantView.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flip_card/flip_card.dart';
+import 'package:badges/badges.dart';
+import '../utils/globals.dart';
 
 class UserFeed extends StatefulWidget {
   @override
@@ -27,7 +30,7 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
   }
 
   void getPopularRestaurants() async {
-  var response = await http.get('http://localhost:9000/api/public/library/restaurants?requestQueryType=popular');
+  var response = await http.get('http://$server:$port/api/public/library/restaurants?requestQueryType=popular');
   var responseJSON = response.body;
   var decodedJSON = jsonDecode(responseJSON);
   setState(() {
@@ -51,6 +54,8 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: EdgeInsets.only(top: 24.0),
+      color: Colors.white,
       child: Container(
         child: popularRestaurants == null ? Container(
           child: Center(
@@ -73,13 +78,116 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                 
             //   ) /////// ******* Should Create a new header class for persistat header
             // ),
+            SliverAppBar(
+              backgroundColor: Colors.white,
+              forceElevated: true,
+              pinned: true,
+              primary: false,
+              flexibleSpace: FlexibleSpaceBar(
+                collapseMode: CollapseMode.pin,
+                
+              ),
+              actions: <Widget>[
+                // Container(
+                //   margin: EdgeInsets.all(16.0),
+                //   child: Icon(
+                //   Icons.search,
+                //   color: Colors.blueGrey,
+                // ),
+                // ),
+                Container(
+                  margin: EdgeInsets.all(16.0),
+                  child: Badge(
+                    child: Icon(
+                  Icons.notifications,
+                  color: Colors.blueGrey,
+                ),
+                badgeColor: Colors.green,
+                badgeContent: Text('3',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13.0
+                ),
+                ),
+                animationType: BadgeAnimationType.scale,
+                  )
+                )
+              ],
+              titleSpacing: 0.0,
+              centerTitle: false,
+              title: Container(
+                margin: EdgeInsets.only(left: 5.0),
+                width: MediaQuery.of(context).size.width * 0.5,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Container(
+                      margin: EdgeInsets.all(3.0),
+                      child: Text("YOUR LOCATION - HOME",
+                      style: TextStyle(
+                        color: Colors.blueGrey,
+                        fontSize: 9.0,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: 'HK Grotesk',
+                      ),
+                      ),
+                    ),
+                    Container(
+                      margin: EdgeInsets.all(3.0),
+                      child: Text("BMSIT Boys Hostel, BMSIT",
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: 'HK Grotesk',
+                      ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             SliverList(
               delegate: SliverChildListDelegate([
                 Container(
-                   margin: EdgeInsets.fromLTRB(0, 30, 0, 20),
+                   margin: EdgeInsets.fromLTRB(0, 10, 0,5),
                       child: Column(
                         children: <Widget>[
-                          
+                          /*Container(
+                            margin: EdgeInsets.fromLTRB(5, 5, 10, 5),
+                            child: Flex(
+                              direction: Axis.horizontal,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Expanded(
+                                  child: Container(
+                                    margin: EdgeInsets.fromLTRB(5.0, 9.0,9.0, 0.0),
+                                    alignment: Alignment.bottomCenter,
+                                    child: Divider(
+                                    color: Colors.grey,
+                                  ),
+                                  )
+                                ),
+                                Text("Popular Picked for You", style: TextStyle(
+                                  fontFamily: 'Mosk',
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 19,
+                                  color: Colors.black87
+                                ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    margin: EdgeInsets.fromLTRB(9.0, 9.0, 5.0, 0.0),
+                                    alignment: Alignment.bottomCenter,
+                                    child: Divider(
+                                    color: Colors.grey,
+                                  ),
+                                  )
+                                )
+                              ],
+                            ),
+                          ),*/
                           Container(
                               height: 200,
                               child: PopularRestaurantsCarousel(),
@@ -89,7 +197,7 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                       )
                 ),
                 Heading(
-                  heading: "Popular Restaurants",
+                  heading: "Top Restaurants",
                 ),
                 Container(
                   color: Colors.transparent,
@@ -123,9 +231,9 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                                                     FadeInImage.assetNetwork(
                                                       fadeInDuration: Duration(milliseconds: 200),
                                                     placeholder: 'assets/imageBackground.png',
-                                                    image: 'http://localhost:9000/images/restaurants/image.jpg',
+                                                    image: 'http://$server:$port/images/restaurants/image.jpg',
                                                     // Image.network(
-                                                    //   'http://localhost:9000/images/restaurants/image.jpg',
+                                                    //   'http://$server:$port/images/restaurants/image.jpg',
                                                     height: 80,
                                                     width: 120,
                                                     fit: BoxFit.cover,
@@ -151,7 +259,7 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                                                         restaurantNameDecider(popularRestaurants[index]["name"]),
                                                         textAlign: TextAlign.left,
                                                         style: TextStyle(
-                                                          fontFamily: 'kano',
+                                                          fontFamily: 'Mosk',
                                                           fontSize: 14
                                                         ),
                                                       )
@@ -208,7 +316,7 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                             right: 0,
                             bottom: 0,
                                 child: RatingsBadge(
-                                  rating: index % 2 == 0 ? 3.6 : 4.7
+                                  rating: double.parse(popularRestaurants[index]["ratings"])
                                 ),
                               ),
                             ],)
@@ -313,9 +421,7 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                                                     FadeInImage.assetNetwork(
                                                       fadeInDuration: Duration(milliseconds: 200),
                                                     placeholder: 'assets/imageBackground.png',
-                                                    image: 'http://localhost:9000/images/restaurants/image.jpg',
-                                                    // Image.network(
-                                                    //   'http://localhost:9000/images/restaurants/image.jpg',
+                                                    image: popularRestaurants[index]["images"],
                                                     height: 80,
                                                     width: 120,
                                                     fit: BoxFit.cover,
@@ -398,7 +504,7 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                             right: 0,
                             bottom: 0,
                                 child: RatingsBadge(
-                                  rating: index % 2 == 0 ? 3.6 : 4.7
+                                  rating: double.parse(popularRestaurants[index]["ratings"])
                                 ),
                               ),
                             ],)
@@ -541,7 +647,7 @@ class _PopularRestaurantsCarouselState extends State<PopularRestaurantsCarousel>
             ClipRRect(
               borderRadius: BorderRadius.all(Radius.circular(8.0)),
               child: Image.network(
-            'http://localhost:9000/images/restaurants/image.jpg',
+            'http://$server:$port/images/restaurants/image.jpg',
               height: 200,
               filterQuality: FilterQuality.high,
               fit: BoxFit.cover,
@@ -786,7 +892,7 @@ class RatingsBadge extends StatelessWidget {
 class Heading extends StatelessWidget {
   @required final String heading;
 
-  const Heading({Key key, this.heading}) : super(key: key);
+  const Heading({Key key,@required this.heading}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -796,7 +902,7 @@ class Heading extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(heading, style: TextStyle(
-            fontFamily: 'HK Grotesk',
+            fontFamily: 'Mosk',
             fontWeight: FontWeight.w500,
             fontSize: 18,
             color: Colors.black87

@@ -5,6 +5,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart' as http;
 import 'package:mazon/screens/inorder.dart';
 import 'package:mazon/utils/customCard.dart';
+import '../utils/globals.dart';
 
 class RestaurantView extends StatefulWidget {
   @required final String restaurantID;
@@ -21,7 +22,7 @@ class _RestaurantViewState extends State<RestaurantView> {
   ScrollController _controller;
 
   void getRestaurantData(String restaurantID) async{
-  var response = await http.get('http://localhost:9000/api/library/restaurants/'+restaurantID);
+  var response = await http.get('http://$server:$port/api/library/restaurants/'+restaurantID);
   setState(() {
     restaurantData = jsonDecode(response.body);
   });
@@ -133,7 +134,8 @@ class _RestaurantViewState extends State<RestaurantView> {
                                         style: TextStyle(
                                           color: Colors.black,
                                           fontSize: 25,
-                                          fontFamily: 'SofiaProSoftW01-Regular'
+                                          fontFamily: 'Kano',
+                                          fontWeight: FontWeight.w500
                                         ),
                                       ),
                                       ),
@@ -346,7 +348,7 @@ class _RestaurantViewState extends State<RestaurantView> {
                                 "Order your food!! Now",
                                 style: TextStyle(
                                   fontSize: 16,
-                                  fontFamily: 'SofiaProSoftW01-Regular',
+                                  fontFamily: 'Orkney',
                                   color: Color(0xff363636)
                                 ),
                                 )
@@ -388,10 +390,10 @@ class _RestaurantViewState extends State<RestaurantView> {
                                 padding: EdgeInsets.only(left: 15.0, top: 2.0, bottom: 2.0, right: 10.0),
                                 width: 0.7 * MediaQuery.of(context).size.width,
                                 child: Text(
-                                "Book a table now",
+                                "Book a table today",
                                 style: TextStyle(
                                   fontSize: 16,
-                                  fontFamily: 'SofiaProSoftW01-Regular',
+                                  fontFamily: 'Orkney',
                                   color: Color(0xff363636)
                                 ),
                                 )

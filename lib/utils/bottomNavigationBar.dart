@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:badges/badges.dart';
 
 class BottomNavigationBarItem {
-  BottomNavigationBarItem({this.iconData, this.label, this.itemIconSize});
+  BottomNavigationBarItem({@required this.iconData, this.label, this.itemIconSize, this.badgeCount});
   IconData iconData;
   String label;
   double itemIconSize;
+  String badgeCount;
 }
 
 class BottomNavigationBar extends StatefulWidget {
+
   BottomNavigationBar({
     this.items,
     this.activeTintColor,
@@ -21,7 +24,7 @@ class BottomNavigationBar extends StatefulWidget {
     this.centerIcon,
     this.shifting: false,
     this.labeled: true,
-    this.elevation: 2.0
+    this.elevation: 2.0,
   });
   final IconData centerIcon;
   final List<BottomNavigationBarItem> items;
@@ -74,7 +77,7 @@ class _BottomNavigationBarState extends State<BottomNavigationBar> {
         Widget buildNavigationBarItem({BottomNavigationBarItem item, int index, Function(int index) onPressed}) {
           Color color = selectedTab == index ? widget.activeTintColor : widget.inactiveTintColor;
           return Expanded(
-            child: Container(
+            child:  Container(
               height: widget.height,
               child: Material(
                 elevation: widget.elevation,
@@ -83,20 +86,36 @@ class _BottomNavigationBarState extends State<BottomNavigationBar> {
                   onTap: () => 
                     onPressed(index)
                   ,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                  child:Column(
+                    mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      item.itemIconSize == widget.iconSize || item.itemIconSize == null ? Icon(item.iconData, color: color, size: widget.iconSize) :  Icon(item.iconData, color: color, size: item.itemIconSize),
-                      widget.labeled || (widget.shifting == true && selectedTab == index) ? new Text(item.label, style: TextStyle(color: color)) : new Container(
-                        width: 0,
-                        height: 0
-                      )
-                    ],
+                         item.badgeCount != "" && item.badgeCount != null ? Badge(
+                              badgeContent: Text(item.badgeCount,
+                              style: TextStyle(
+                                fontFamily: 'HK Grotesk',
+                                fontSize: 12.0,
+                                color: Colors.white
+                              ),
+                              ),
+                              badgeColor: Colors.green,
+                              
+                              child:  item.itemIconSize == widget.iconSize || item.itemIconSize == null ? Icon(item.iconData, color: color, size: widget.iconSize) : Icon(item.iconData, color: color, size: item.itemIconSize),
+                           ) : Badge(
+                              badgeContent: Text(""),
+                              showBadge: item.badgeCount == "" ? true : false,
+                              badgeColor: Colors.green,
+                              child:  item.itemIconSize == widget.iconSize || item.itemIconSize == null ? Icon(item.iconData, color: color, size: widget.iconSize) : Icon(item.iconData, color: color, size: item.itemIconSize),
+                           ) ,
+                            widget.labeled || (widget.shifting == true && selectedTab == index) ? new Text(item.label, style: TextStyle(color: color)) : new Container(
+                              width: 0,
+                              height: 0
+                            )
+                  ],
                   ),
+                  ) 
                 ),
               )
-            )
           );
         }
       

@@ -27,9 +27,21 @@ dependencies:
 
   http: ^0.12.0+2
 
+  badges: ^1.1.0
+
+  google_maps_flutter: ^0.5.11
+
+  flutter_emoji: ">= 2.0.0"
+
   flutter_rating_bar: ^1.1.0
 
   flip_card: ^0.3.0
+
+  shared_preferences: ^0.5.3+3
+
+  qr_mobile_vision: ^0.2.2
+
+  flutter_secure_storage: ^3.2.1+1
 
 dev_dependencies:
   flutter_test:
@@ -92,6 +104,45 @@ flutter:
   - family: Kano
     fonts:
     - asset: assets/fonts/Kano.otf
+
+  - family: Agane
+    fonts:
+    - asset: assets/fonts/Aganè-Bold.ttf
+    - asset: assets/fonts/Aganè-light.ttf
+    - asset: assets/fonts/Aganè-roman.ttf
+
+  - family: Mosk Normal 400
+    fonts:
+    - asset: assets/fonts/Mosk-Normal.ttf
+  
+  - family: Mosk
+    fonts:
+    - asset: assets/fonts/Mosk-Medium.ttf
+    - asset: assets/fonts/Mosk-Bold.ttf
+    - asset: assets/fonts/Mosk-Extra-Light.ttf
+    - asset: assets/fonts/Mosk-Light.ttf
+    - asset: assets/fonts/Mosk-Semi-Bold.ttf
+    - asset: assets/fonts/Mosk-Thin.ttf
+
+  - family: Orkney
+    fonts:
+    - asset: assets/fonts/orkney-regular.otf
+    - asset: assets/fonts/orkney-light.otf
+    - asset: assets/fonts/orkney-medium.otf
+
+  - family: Signika
+    fonts: 
+    - asset: assets/fonts/Signika-Bold.ttf
+    - asset: assets/fonts/Signika-Light.ttf
+    - asset: assets/fonts/Signika-Regular.ttf
+    - asset: assets/fonts/Signika-Semibold.ttf
+  
+  - family: Signika Negative
+    fonts: 
+    - asset: assets/fonts/SignikaNegative-Bold.ttf
+    - asset: assets/fonts/SignikaNegative-Light.ttf
+    - asset: assets/fonts/SignikaNegative-Regular.ttf
+    - asset: assets/fonts/SignikaNegative-Semibold.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:
