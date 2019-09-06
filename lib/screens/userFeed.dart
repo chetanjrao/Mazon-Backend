@@ -1,15 +1,20 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:mazon/my_flutter_app_icons.dart';
 import 'package:mazon/utils/customCard.dart';
 import './restaurantView.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:badges/badges.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../utils/globals.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:shimmer/shimmer.dart';
 
 class UserFeed extends StatefulWidget {
   @override
@@ -30,7 +35,7 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
   }
 
   void getPopularRestaurants() async {
-  var response = await http.get('http://$server:$port/api/public/library/restaurants?requestQueryType=popular');
+  var response = await http.get('http://$server:$port/api/public/library/restaurants?requestQueryType=popular',);
   var responseJSON = response.body;
   var decodedJSON = jsonDecode(responseJSON);
   setState(() {
@@ -55,7 +60,6 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(top: 24.0),
-      color: Colors.white,
       child: Container(
         child: popularRestaurants == null ? Container(
           child: Center(
@@ -73,128 +77,93 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
         ) : CustomScrollView(
           scrollDirection: Axis.vertical,
           slivers: <Widget>[
-            // SliverPersistentHeader(
-            //   delegate: SliverPersistentHeaderDelegate(
-                
-            //   ) /////// ******* Should Create a new header class for persistat header
-            // ),
-            SliverAppBar(
-              backgroundColor: Colors.white,
-              forceElevated: true,
-              pinned: true,
-              primary: false,
-              flexibleSpace: FlexibleSpaceBar(
-                collapseMode: CollapseMode.pin,
-                
-              ),
-              actions: <Widget>[
-                // Container(
-                //   margin: EdgeInsets.all(16.0),
-                //   child: Icon(
-                //   Icons.search,
-                //   color: Colors.blueGrey,
-                // ),
-                // ),
-                Container(
-                  margin: EdgeInsets.all(16.0),
-                  child: Badge(
-                    child: Icon(
-                  Icons.notifications,
-                  color: Colors.blueGrey,
-                ),
-                badgeColor: Colors.green,
-                badgeContent: Text('3',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13.0
-                ),
-                ),
-                animationType: BadgeAnimationType.scale,
-                  )
-                )
-              ],
-              titleSpacing: 0.0,
-              centerTitle: false,
-              title: Container(
-                margin: EdgeInsets.only(left: 5.0),
-                width: MediaQuery.of(context).size.width * 0.5,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Container(
-                      margin: EdgeInsets.all(3.0),
-                      child: Text("YOUR LOCATION - HOME",
-                      style: TextStyle(
-                        color: Colors.blueGrey,
-                        fontSize: 9.0,
-                        fontWeight: FontWeight.w400,
-                        fontFamily: 'HK Grotesk',
-                      ),
-                      ),
-                    ),
-                    Container(
-                      margin: EdgeInsets.all(3.0),
-                      child: Text("BMSIT Boys Hostel, BMSIT",
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.w400,
-                        fontFamily: 'HK Grotesk',
-                      ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
             SliverList(
               delegate: SliverChildListDelegate([
-                Container(
-                   margin: EdgeInsets.fromLTRB(0, 10, 0,5),
-                      child: Column(
-                        children: <Widget>[
-                          /*Container(
-                            margin: EdgeInsets.fromLTRB(5, 5, 10, 5),
-                            child: Flex(
-                              direction: Axis.horizontal,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Expanded(
-                                  child: Container(
-                                    margin: EdgeInsets.fromLTRB(5.0, 9.0,9.0, 0.0),
-                                    alignment: Alignment.bottomCenter,
-                                    child: Divider(
-                                    color: Colors.grey,
+                Flex(
+                  direction: Axis.horizontal,
+                  children: <Widget>[
+                     Container(
+                       margin: EdgeInsets.only(top: 10.0),
+                        width: 42.0,
+                       height: 48.0,
+                       padding: EdgeInsets.all(5.0),
+                        child:Center(
+                      child: Icon(
+                          MdiIcons.text,
+                          color: Colors.blueGrey,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                      margin: EdgeInsets.only(top: 12.0, right: 12.0, left: 6.0),
+                      height: 48.0,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x22000000),
+                              offset: Offset(2.0, 0.5),
+                              blurRadius: 1.0,
+                              spreadRadius: 1.0
+                            )
+                            ]
+                        ),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            margin: EdgeInsets.only(left: 8.0),
+                            child: Wrap(
+                          children: <Widget>[
+                                Icon(
+                                  Icons.search,
+                                  color: Colors.blueGrey,
+                                  size: 22.0, 
+                                ),
+                                Container(
+                                    margin: EdgeInsets.only(top: 3.0, left: 5.0),
+                                    child: Text(
+                                    "Search",
+                                    style: TextStyle(
+                                      fontSize: 16.0,
+                                      fontFamily: 'Orkney',
+                                      color: Colors.blueGrey
+                                    ),
                                   ),
-                                  )
                                 ),
-                                Text("Popular Picked for You", style: TextStyle(
-                                  fontFamily: 'Mosk',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 19,
-                                  color: Colors.black87
-                                ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    margin: EdgeInsets.fromLTRB(9.0, 9.0, 5.0, 0.0),
-                                    alignment: Alignment.bottomCenter,
-                                    child: Divider(
-                                    color: Colors.grey,
+                                Padding(
+                                  padding: EdgeInsets.only(top: 3.0, left: 5.0),
+                                  child: FadeAnimatedTextKit(
+                                  onTap: (){
+
+                                  },
+                                  text: [
+                                    "Food",
+                                    "Cusines",
+                                    "Varieties",
+                                    "Restaurants",
+                                    "Cafes",
+                                    "Locations",
+                                    "Mazon"
+                                  ],
+                                  textStyle: TextStyle(
+                                    fontSize: 16.0,
+                                    fontFamily: 'Orkney',
+                                    color: Colors.blueGrey,
+                                    fontWeight: FontWeight.w600
                                   ),
-                                  )
+                                  alignment: AlignmentDirectional.topStart,
+                                  isRepeatingAnimation: false,
+                                )
                                 )
                               ],
                             ),
-                          ),*/
-                          Container(
-                              height: 200,
-                              child: PopularRestaurantsCarousel(),
-                            ),
-                            
-                        ],
-                      )
+                          )
+                        )
+                      ),
+                    )
+                  ],
                 ),
                 Heading(
                   heading: "Top Restaurants",
@@ -212,7 +181,8 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                           child: Card(
                             elevation: 2.0,
                             clipBehavior: Clip.antiAliasWithSaveLayer,
-                            child: Stack(children: <Widget>[
+                            child: Stack(
+                              children: <Widget>[
                               Container(
                               height: 140,
                               width: 120,
@@ -230,13 +200,11 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                                                   children: <Widget>[
                                                     FadeInImage.assetNetwork(
                                                       fadeInDuration: Duration(milliseconds: 200),
-                                                    placeholder: 'assets/imageBackground.png',
-                                                    image: 'http://$server:$port/images/restaurants/image.jpg',
-                                                    // Image.network(
-                                                    //   'http://$server:$port/images/restaurants/image.jpg',
-                                                    height: 80,
-                                                    width: 120,
-                                                    fit: BoxFit.cover,
+                                                      placeholder: 'assets/imageBackground.png',
+                                                      image: 'http://$server:$port/images/restaurants/image.jpg',
+                                                      height: 80,
+                                                      width: 120,
+                                                      fit: BoxFit.cover,
                                                     )
                                                   ],
                                                 )
@@ -259,8 +227,8 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                                                         restaurantNameDecider(popularRestaurants[index]["name"]),
                                                         textAlign: TextAlign.left,
                                                         style: TextStyle(
-                                                          fontFamily: 'Mosk',
-                                                          fontSize: 14
+                                                          fontFamily: 'Orkney',
+                                                          fontSize: 13
                                                         ),
                                                       )
                                                     ),
@@ -328,6 +296,388 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                           },
                         );
                       },
+                  ),
+                ),
+                Heading(
+                  heading: "Popular Restaurants",
+                ),
+                Container(
+                  height: 130.0,
+                  margin: EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 10),
+                  child: ListView.builder(
+        itemCount: 15,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index){
+          return Container(
+            width: 210,
+            height: 140,
+            margin: EdgeInsets.fromLTRB(0, 0, 5, 10),
+             child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(6.0))
+                ),
+                clipBehavior: Clip.antiAliasWithSaveLayer,
+                elevation: 4.0,
+                    child: Container(
+                      child: Stack(
+                        children: <Widget>[
+                          Container(
+                            width: 210,
+                            foregroundDecoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [
+                                  Colors.black87,
+                                  Colors.black38,
+                                  Colors.black12,
+                                  Colors.transparent
+                                ],
+                                stops: [
+                                  0.0,
+                                  0.3,
+                                  0.6,
+                                  1.0
+                                ]
+                              )
+                            ),
+                            child: Image.network(
+                            index % 2 == 0 ? 'https://cdn5.eyeem.com/thumb/e8e86a5bae1003daf0cdd9b208a5dc1e5a50f845-1538885667725/w/850' : 'https://thewallpaper.co/wp-content/uploads/2016/09/place-hd-wallpapers-Backgrounds-download-Beautiful-Places-free-cool-monitor-place-desktop-wallpapers-1366x768.jpg',
+                            filterQuality: FilterQuality.high,
+                            fit: BoxFit.cover,
+                          ),
+                          ),
+                          Container(
+                            alignment: Alignment.bottomRight,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Text(
+                                  "Hotel Emperor",
+                                  style: TextStyle(
+                                    fontFamily: 'kano',
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white
+                                  ),
+                                ),
+                                Container(
+                                  margin: EdgeInsets.fromLTRB(5.0, 2.0, 5.0, 6.0),
+                                  child: FlutterRatingBarIndicator(
+                                    itemPadding: EdgeInsets.all(0.5),
+                                    rating: double.parse("4.0"),
+                                    itemCount: 5,
+                                    itemSize: 10.0,
+                                    emptyColor: Colors.amber.withAlpha(50),
+                                ),
+                                )
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                ),
+          );
+            },
+                ),
+                ),
+                Heading(
+                  heading: "Fast Serving Restaurants",
+                ),
+                Container(
+                  height: 150.0,
+                  margin: EdgeInsets.only(left: 5.0, bottom: 16.0, top: 5.0),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 10,
+                    itemBuilder: (context, index){
+                      return Container(
+                        width: 120.0,
+                        margin: EdgeInsets.all(5.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Color(0x22000000),
+                                offset: Offset(1.0, 1.0),
+                                blurRadius: 1.0,
+                                spreadRadius: 1.0
+                              )
+                            ]
+                        ),
+                        child: Container(
+                          child: Stack(
+                            children: <Widget>[
+                              Container(
+                                child: ClipRRect(
+                                  child: FadeInImage.assetNetwork(
+                                    fadeInDuration: Duration(milliseconds: 200),
+                                    placeholder: 'assets/imageBackground.png',
+                                    image: 'http://$server:$port/images/restaurants/image.jpg',
+                                    height: 75,
+                                    width: 120,
+                                    fit: BoxFit.cover,
+                                ),
+                                borderRadius: BorderRadius.only(topLeft: Radius.circular(6.0), topRight: Radius.circular(6.0)),
+                                )
+                              ),
+                              Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Container(
+                                  height: 65,
+                                  width: 120,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(6.0), bottomRight: Radius.circular(6.0)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Container(
+                                        margin: EdgeInsets.only(left: 4.0, top: 4.0),
+                                        child: Text("Big Brooskee",
+                                        style: TextStyle(
+                                          fontFamily: "Orkney",
+                                          fontSize: 13.0,
+                                          fontWeight: FontWeight.w500
+                                        ),
+                                        ),
+                                      ),
+                                      Container(
+                                        margin: EdgeInsets.only(left: 4.0, top: 2.0),
+                                        child: Text("13TH Cross, Bell Road".toUpperCase(),
+                                        style: TextStyle(
+                                          fontFamily: "Orkney",
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF868686)
+                                        ),
+                                        ),
+                                      ),
+                                      Container(
+                                        margin: EdgeInsets.only(left: 4.0, top: 2.0),
+                                        child: Text("Yelahanka".toUpperCase(),
+                                        style: TextStyle(
+                                          fontFamily: "Orkney",
+                                          fontSize: 8.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF868686)
+                                        ),
+                                        ),
+                                      ),
+                                      Wrap(
+                                       children: <Widget>[
+                                         Container(
+                                        margin: EdgeInsets.fromLTRB(3.8, 2, 4, 2),
+                                        child: FlutterRatingBarIndicator(
+                                            itemPadding: EdgeInsets.all(0.2),
+                                            rating: double.parse(popularRestaurants[index]["ratings"]),
+                                            itemCount: 5,
+                                            itemSize: 9.0,
+                                            emptyColor: Colors.amber.withAlpha(50),
+                                        ),
+                                      ),
+                                      Container(
+                                        margin: EdgeInsets.only(left: 4.0, top: 2.0),
+                                        padding: EdgeInsets.all(1.0),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.all(Radius.circular(3.0)),
+                                          color: Color(0xFFE0AB8B),
+                                          border: Border.all(
+                                            color: Colors.orangeAccent,
+                                            width: 0.35
+                                          )
+                                        ),
+                                        child: Text("20% offer".toUpperCase(),
+                                        style: TextStyle(
+                                          fontFamily: "Orkney",
+                                          fontSize: 7.0,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black87
+                                        ),
+                                        ),
+                                      ),
+                                       ]
+                                       ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                child: Container(
+                                  margin: EdgeInsets.all(3.0),
+                                  padding: EdgeInsets.all(2.5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle
+                                  ),
+                                  child: Icon(
+                                    MdiIcons.crown,
+                                    color: Color(0XFFD4AF37),
+                                    size: 10.0,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 36.0,
+                                  height: 20.0,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF363636) ,
+                                    borderRadius: BorderRadius.only(topRight: Radius.circular(6.0), bottomLeft: Radius.circular(3.0))
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                    "30 min",
+                                    style: TextStyle(
+                                      fontFamily: "Orkney",
+                                        fontSize: 9.0,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500
+                                      ),
+                                    ),
+                                  )
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      );
+                    },
+                  ),
+                ),
+                Heading(
+                  heading: "Most Visited Restaurants",
+                ),
+                Container(
+                  height: 140.0,
+                  margin: EdgeInsets.only(left: 5.0, bottom: 20.0),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 10,
+                    itemBuilder: (context, index){
+                      return Container(
+                        width: 120.0,
+                        margin: EdgeInsets.all(5.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x22000000),
+                              offset: Offset(1.0, 1.0),
+                              blurRadius: 1.0,
+                              spreadRadius: 1.0
+                            )
+                            ]
+                        ),
+                        child: Stack(
+                          children: <Widget>[
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(6.0),
+                                  bottomLeft: Radius.circular(6.0),
+                                )
+                              ),
+                              child: ClipPath(
+                                clipper: SlantClipper(
+                                  height: 140,
+                                  width: 120
+                                ),
+                                clipBehavior: Clip.antiAliasWithSaveLayer,
+                                child: FadeInImage.assetNetwork(
+                                  fadeInDuration: Duration(milliseconds: 200),
+                                  placeholder: 'assets/imageBackground.png',
+                                  image: "http://$server:$port/images/restaurants/image.jpg",
+                                  height: 140,
+                                  width: 120,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            ),
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(6.0),
+                                  bottomLeft: Radius.circular(6.0),
+                                )
+                              ),
+                              child: ClipPath(
+                                clipper: SlantClipper(
+                                  height: 140,
+                                  width: 120
+                                ),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(sigmaX: 0.8, sigmaY: 0.8),
+                                  child:  Container(
+                                    decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.0),
+                                    ),
+                                    ),
+                                ),
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.bottomRight,
+                              child: Container(
+                                margin: EdgeInsets.all(4.0),
+                                height: 90.0,
+                                width: 80.0,
+                                child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: <Widget>[
+                                      Container(
+                                        child: Text(
+                                          "Hotel Emporer",
+                                          textDirection: TextDirection.rtl,
+                                          style: TextStyle(
+                                            color: Color(0xff363636),
+                                            fontFamily: "Mosk",
+                                            fontSize: 13.0,
+                                            fontWeight: FontWeight.w600
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        margin: EdgeInsets.fromLTRB(3.8, 2, 4, 2),
+                                        child: FlutterRatingBarIndicator(
+                                            itemPadding: EdgeInsets.all(0.2),
+                                            rating: double.parse(popularRestaurants[index]["ratings"]),
+                                            itemCount: 5,
+                                            itemSize: 9.0,
+                                            emptyColor: Colors.amber.withAlpha(50),
+                                        ),
+                                      ),
+                                      Container(
+                                        child: Shimmer.fromColors(
+                                          baseColor: Colors.amber,
+                                          highlightColor: Colors.white,
+                                          child: Text(
+                                            "56000 Visits",
+                                            style: TextStyle(
+                                              fontFamily: "Mosk",
+                                              fontSize: 11.0,
+                                              color:  Colors.amber,
+                                            ),
+                                          ),
+                                        )
+                                      ),
+                                    ],
+                                  ),
+                              ),
+                            )
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
                 Heading(
@@ -421,7 +771,7 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                                                     FadeInImage.assetNetwork(
                                                       fadeInDuration: Duration(milliseconds: 200),
                                                     placeholder: 'assets/imageBackground.png',
-                                                    image: popularRestaurants[index]["images"],
+                                                    image: "http://$server:$port/images/restaurants/image.jpg",
                                                     height: 80,
                                                     width: 120,
                                                     fit: BoxFit.cover,
@@ -447,8 +797,8 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                                                         restaurantNameDecider(popularRestaurants[index]["name"]),
                                                         textAlign: TextAlign.left,
                                                         style: TextStyle(
-                                                          fontFamily: 'kano',
-                                                          fontSize: 14
+                                                          fontFamily: 'Orkney',
+                                                          fontSize: 13
                                                         ),
                                                       )
                                                     ),
@@ -495,7 +845,6 @@ class _UserFeedState extends State<UserFeed> with AutomaticKeepAliveClientMixin 
                                           )
                                         ],
                                       ),
-                                      
                                     ],
                                   ),
                           ),
@@ -628,17 +977,17 @@ class _PopularRestaurantsCarouselState extends State<PopularRestaurantsCarousel>
           value = 0.75;
         }
         return Center(
-          heightFactor: 1.0,
+          heightFactor: 0.7,
           widthFactor: 1.0,
           child: new SizedBox(
-            height: Curves.easeOut.transform(value) * 200,
-            width: Curves.easeOut.transform(value) * (MediaQuery.of(context).size.width * 0.95),
+            height: Curves.easeOut.transform(value) * 190,
+            width: Curves.easeOut.transform(value) * (MediaQuery.of(context).size.width),
             child: child,
           ),
         );
       },
       child: new Container(
-        height: 200,
+        height: 160,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(8.0)),
         ),
@@ -648,7 +997,7 @@ class _PopularRestaurantsCarouselState extends State<PopularRestaurantsCarousel>
               borderRadius: BorderRadius.all(Radius.circular(8.0)),
               child: Image.network(
             'http://$server:$port/images/restaurants/image.jpg',
-              height: 200,
+              height: 160,
               filterQuality: FilterQuality.high,
               fit: BoxFit.cover,
             ),
@@ -680,7 +1029,7 @@ class _HangoutPlacesCarouselState extends State<HangoutPlacesCarousel> with Auto
           return Container(
             width: 210,
             height: 140,
-            margin: EdgeInsets.fromLTRB(5, 0, 5, 10),
+            margin: EdgeInsets.fromLTRB(5, 0, 5, 0),
             child: FlipCard(
               direction: FlipDirection.HORIZONTAL, // default
               front: Card(
@@ -896,27 +1245,18 @@ class Heading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.fromLTRB(5, 5, 10, 5),
+      margin: EdgeInsets.fromLTRB(5, 14, 10, 5),
       child: Flex(
         direction: Axis.horizontal,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(heading, style: TextStyle(
-            fontFamily: 'Mosk',
-            fontWeight: FontWeight.w500,
-            fontSize: 18,
-            color: Colors.black87
+            fontFamily: 'Orkney',
+            fontWeight: FontWeight.w600,
+            fontSize: 17,
+            color: Color(0xFF363636)
           ),
           ),
-          Expanded(
-            child: Container(
-              margin: EdgeInsets.fromLTRB(9.0, 9.0, 5.0, 0.0),
-              alignment: Alignment.bottomCenter,
-              child: Divider(
-              color: Colors.grey,
-            ),
-            )
-          )
         ],
       ),
     );
@@ -934,7 +1274,7 @@ class IconCard extends StatelessWidget {
         width: 60,
         height: 60,
         child: Card(
-          elevation: 4.0,
+          elevation: 2.0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(10.0)),
         ),
@@ -1003,4 +1343,27 @@ class IconTitle extends StatelessWidget {
             )
           );
   }
+}
+
+class SlantClipper extends CustomClipper<Path>{
+  final double height;
+  final  double width;
+  const SlantClipper({Key key, @required this.height, @required this.width});
+
+  @override
+  Path getClip(Size size) {
+    Path mainPath = new Path();
+    mainPath.moveTo(0, 0);
+    mainPath.lineTo(0, height);
+    mainPath.lineTo(25, height);
+    mainPath.lineTo(width-5, 0);
+    mainPath.lineTo(0, 0);
+    return mainPath;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) {
+    return true;
+  }
+
 }

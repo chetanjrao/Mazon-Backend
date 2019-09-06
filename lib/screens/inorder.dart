@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:mazon/my_flutter_app_icons.dart';
 import 'package:flutter_emoji/flutter_emoji.dart';
+import 'package:http/http.dart' as http;
+import '../utils/globals.dart';
 
 class Inorder extends StatefulWidget {
   @required final String restaurantID, restaurantName;
@@ -19,6 +23,7 @@ class _InorderState extends State<Inorder> with SingleTickerProviderStateMixin{
   TabController _tabController;
   ScrollController _controller;
   bool isChanged;
+  List restaurantMenu; 
   int currentIndex = 0;
   var parser = EmojiParser();
   var satisfaction_1 = Emoji('ver-happy', '');
@@ -27,12 +32,23 @@ class _InorderState extends State<Inorder> with SingleTickerProviderStateMixin{
   Map<String, Map<String, String>> itemList = {};
   int itemsCount = 0;
 
-
+  void assignRestuarantFoodData() async{
+    var response = await http.get(
+      'http://$server:$port/api/library/menu/5c7ff5206dc0124e29585341',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": 'Bearer e0e88989b12df0aec51b4312320ae8a75c3b7d96332790b84530e2cc9dbaf5a31cc8cbd7635628d1ac542c4ff8e86558eb6805216af94c906528c453b84308b79c1bcc1676388fcd785f3bc6789535ceea0c4d0628c486e52c9363c1234f425302f13d428d7d7599fddf42944428b12c.356430306436336663333034356330323637626563613639'
+      }
+    );
+    var body = jsonDecode(response.body);
+    print(body);
+  }
 
   @override
   void initState() {
     super.initState();
     isChanged = false;
+    assignRestuarantFoodData();
     _tabController = TabController(length: 10, initialIndex: currentIndex, vsync: this );
     _controller = new ScrollController();
   }
@@ -173,7 +189,6 @@ int getAllItemsCount(){
     return DefaultTabController(
       length: 11,
       child: Container(
-        margin: EdgeInsets.only(top: 24.0),
         child: Scaffold(
         key: _scaffoldkey,
         //   floatingActionButton: FloatingActionButton.extended(
