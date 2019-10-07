@@ -1,16 +1,15 @@
 /*
- *   Copyright (c) 2019 
- *   All rights reserved.
+ * Created on Wed Sep 25 2019
+ *
+ * Author - Chethan Jagannatha Kulkarni, CTO, Mazon Services Pvt. Ltd. 
+ * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
+
 
 const mongoose = require('mongoose')
 
 const Food = new mongoose.Schema({
-    rId: { 
-        type: String,
-        required:true
-    },
-    name: { 
+    fName: { 
         type: String,
         required: true 
     },
@@ -21,7 +20,7 @@ const Food = new mongoose.Schema({
         type:Number,
         required:true
     },
-    hprice: {
+    halfPrice: {
         type: Number
     },
     veg: {
@@ -33,10 +32,6 @@ const Food = new mongoose.Schema({
         type:Number,
         default:13,
         required:true
-    },
-    //Changes to be made in food model
-    ratingReviews: {
-        type:[Number],
     },
     orders: {
         type: Number,

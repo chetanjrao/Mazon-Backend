@@ -1,7 +1,10 @@
 /*
- *   Copyright (c) 2019 
- *   All rights reserved.
+ * Created on Sun Sep 15 2019
+ *
+ * Author - Chethan Jagannatha Kulkarni, CTO, Mazon Services Pvt. Ltd. 
+ * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
+
 
 
 
@@ -39,21 +42,30 @@ app.use(bodyparser.json())
 const key = new Buffer.alloc(16, "%Z_4$7x!A%D*G-Ka")
 const iv = new Buffer.alloc(8, "?D(G+KbP");
 var mazonConnection = mongoose.createConnection("mongodb://localhost:27017/Mazon", { useNewUrlParser: true, useCreateIndex: true })
-var restaurants = mazonConnection.model('Restaurants', require('./modals/restaurantModal'))
-var users = mazonConnection.model('Users', require('./modals/User'))
+var restaurants = require('./modals/Restaurant')
+var users = require('./modals/User')
 var oauth = mazonConnection.model('Oauth', require('./modals/Oauth'))
-var bookings = mazonConnection.model('Booking', require('./modals/Booking'))
-var ratingReviews = mazonConnection.model('RatingReview', require('./modals/RatingReview'));
+var bookings = require('./modals/Booking')
+var ratingReviews = require('./modals/RatingReview')
 exports.ratingReviews = ratingReviews;
 var wallet = mazonConnection.model('Wallet', require('./modals/Wallet'))
-var transaction = mazonConnection.model('Transaction', require('./modals/Transaction'))
+var transaction = require('./modals/Transaction')
 var analytic = mazonConnection.model('Analytic', require('./modals/Analytics'))
 var socket = mazonConnection.model('Socket', require('./modals/Socket'))
 var combination = mazonConnection.model('Combination', require('./modals/Combinations'))
 var food = mazonConnection.model('Food', require('./modals/Food'))
-var inorder = mazonConnection.model('Inorder', require('./modals/Inorder'))
-const RestaurantRouter = require('./routes/RestaurantRoutes')
-const OauthRouter = require('./routes/OauthRoutes')
+var inorder = require('./modals/Inorder')
+const emailTransporter = nodeMailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: {
+        user: "1by17ec037@bmsit.in",
+        pass: "Chethanwins@2025"
+    }
+})
+const RestaurantRouter = require('./routes/restaurant.route')
+const OauthRouter = require('./routes/oauth.route')
 app.use('/api/library/restaurants',RestaurantRouter)
 app.use('/api/secure/oauth2', OauthRouter)
 
@@ -120,16 +132,6 @@ const TokenUsageTypes = {
     "BOOKING": 4,
     "PAYMENT": 5
 }
-
-var emailTransporter = nodeMailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-        user: "1by17ec037@bmsit.in",
-        pass: "Chethanwins@2025"
-    }
-})
 // socketio.on('connection', function(socket){
 //     socket.on('disconnect', function(){
 //         console.log('disconnected')
@@ -1633,69 +1635,6 @@ app.get('/api/library/menu/:restaurantID', /*CheckAccessTokenValidiy,*/ (req, re
 }
 })
 
-// app.get('/api/library/menu/:restaurantID', /*CheckAccessTokenValidiy,*/ (req, res)=>{
-//     var restaurantID = req.params.restaurantID;
-//     food.find({'rId': restaurantID }, function(fiErr, fiRes){
-//         if(fiErr){
-
-//         } else if(fiRes.length > 0 ) {
-//             ratingReviews.find({})
-//         }
-//     })
-// })
-
-/****************** Inorder API */
-app.post('/api/secure/bookings/inorder/', CheckAccessTokenValidiy, function(req, res){
-    var inorderRequestToken = req.headers["x-mazon-inorder-request-token"]
-    var orderid = req.body.orderid
-    var tableno = req.body.tableno
-    var restaurant = req.body.restaurant
-    var identity = req.body.identity
-    var menu = req.body.menu
-    var name = req.body.name
-    var email = req.body.email
-    var phone = req.body.phone
-    var offer = req.body.offer
-    var orderType = req.body.orderType
-    oauth.findOne({ 'mazonInorderToken': inorderRequestToken }, function(fErr, fResp){
-        if(fResp){
-            try {
-                var inorderparams = DecryptForBookingsParams(inorderRequestToken)
-                if(inorderparams.identity == identity && inorderparams.usageType == 3 && IndianTimeResponder() < new Date(inorderparams.expiry)){
-                    inorder.create(new inorder({
-                        rId: restaurant,
-                        rTable: tableno,
-                        menu: menu,
-                        orderDateTime: IndianTimeResponder(),
-                        orderStatus: 1,
-                        orderRefID: orderid,
-                        orderType: orderType,
-                        orderToken: inorderRequestToken,
-                        offerApplied: offer,
-                        paymentMode: "None",
-                        isPaid: false,
-                        name: name,
-                        phone: phone,
-                        email: email
-                    }))
-                    //TODO: Execute the function of sending the notifications
-                    // That is push notifications
-                    //from google cloud platform
-                    
-                }
-            } catch (error) {
-                
-            }
-        } else {
-            res.status(403)
-            res.json({
-                "message": "Forbidden. Invalid or Expired API Token",
-                "status": 403
-            })
-        }
-    })
-})
-
 async function getRatingsReviews() {
     try {
         const result = await ratingReviews.find({}).exec();
@@ -1717,6 +1656,12 @@ app.use((err, req, res, next)=>{
     })
 })
 
-app.listen(9000, function(){
+http.listen(9000, function(){
     console.log("Server started at localhost & listening on 9000");
   });
+
+const data = require('./extras/Data')
+
+app.get('/mainMenu', (req, res) => {
+    res.send(data)
+})

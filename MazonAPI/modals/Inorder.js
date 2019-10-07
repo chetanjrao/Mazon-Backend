@@ -2,74 +2,58 @@ var mongoose  = require('mongoose')
 var Schema = mongoose.Schema
 
 var inOrderSchema = new Schema({
-    rId: {
+    r_id: {
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
-    rTable: {
+    r_table: {
         type: Number,
         required: true
     },
     menu: [
         {
-            fID: {
+            id: {
                 type: String,
                 required: true
             },
-            fName: {
-                type: String,
-                required: true
-            },
-            veg: {
-                type: Boolean,
-                required: true
-            },
-            fQuantity: {
-                type: Number,
-                required: true
-            },
-            fPrice: {
+            quantity: {
                 type: Number,
                 required: true
             }
         }
     ],
-    orderDateTime: {
-        type:String,
-        required: true
+    order_date_time: {
+        type: Date,
+        required: true,
+        default: new Date()
     },
-    orderStatus: { 
+    order_status: { 
         /*
              i) 1: Order Placed
             ii) 2: Order Accepted
-            iv) 3: Order is ready
-            vi) 4: Paid
-           vii) 5: Order Cancelled
+            iii) 3: Order is ready
+            iv) 4: Paid
+           v) 5: Order Cancelled
         */
         type: Number,
         default: 1,
         required: true
     },
-    orderRefID: { 
+    order_reference: { 
         type: String,
         required: true
     },
-    orderType: {
-        type: Number,
-        required: true,
-        default: 1
-    },
-    orderToken: {
+    order_token: {
         type: String,
         required: true
     },
-    offerApplied: {
+    offer_applied: {
         type: String// Offer Object ID applied
     },
-    paymentMode: {
+    payment_mode: {
         type: String
     },
-    isPaid: {
+    is_paid: {
         type: Boolean,
         default: false
     },

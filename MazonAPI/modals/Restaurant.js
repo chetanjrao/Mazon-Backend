@@ -7,6 +7,9 @@
 
 var mongoose = require('mongoose')
 var Schema = mongoose.Schema
+const {
+    resources
+} = require('../helpers/dbHelper')
 
 var restaurantSchema = new Schema({
     id: {
@@ -187,5 +190,5 @@ var restaurantSchema = new Schema({
         default: new Date()
     }
 })
-const RestaurantModel = mongoose.model('Restaurant', restaurantSchema)
+const RestaurantModel = resources.model('Restaurant', restaurantSchema)
 module.exports = RestaurantModel

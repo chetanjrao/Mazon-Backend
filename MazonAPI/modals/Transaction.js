@@ -1,7 +1,17 @@
+/*
+ * Created on Wed Sep 25 2019
+ *
+ * Author - Chethan Jagannatha Kulkarni, CTO, Mazon Services Pvt. Ltd. 
+ * Copyright (c) 2019 Mazon Services Pvt. Ltd.
+ */
+
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema
+const {
+    resources
+} = require('../helpers/dbHelper')
 
-const Transaction = new Schema({
+const TransactionSchema = new Schema({
     transactionID: {
         type: String,
     },
@@ -12,7 +22,7 @@ const Transaction = new Schema({
         type: String
     },
     type: {
-        type: String,
+        type: String, //1) CREDIT 2)DEBIT
         required: true
     },
     dateTime: {
@@ -23,5 +33,5 @@ const Transaction = new Schema({
     }
 })
 
-
+const Transaction = resources.model('Transaction', TransactionSchema)
 module.exports = Transaction

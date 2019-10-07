@@ -1,4 +1,7 @@
 var mongoose = require('mongoose');
+const {
+    resources
+} = require('../helpers/dbHelper')
 
 const User = new mongoose.Schema({
     name: {
@@ -124,6 +127,6 @@ const User = new mongoose.Schema({
     }
 })
 
-const UserCollection = mongoose.model('User', User)
+const UserCollection = resources.model('User', User)
 
 module.exports = UserCollection
