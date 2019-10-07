@@ -26,6 +26,10 @@ const AccessToken = new mongoose.Schema({
         required: true,
         default: []
     },
+    project_id: {
+        type: String,
+        required: true
+    },
     username: {
         type: String,
         required: true

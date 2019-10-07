@@ -16,6 +16,10 @@ const RefreshToken = new mongoose.Schema({
         type: Date,
         required: true
     },
+    project_id: {
+        type: String,
+        required: true
+    },
     client_id: {
         type: String,
         required: true

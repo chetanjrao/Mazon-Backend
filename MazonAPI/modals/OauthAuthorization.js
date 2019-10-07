@@ -5,6 +5,10 @@ const OauthAuthorizationSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    project_id: {
+        type: String,
+        required: true
+    },
     redirect_uri: {
         type: String,
         reuired: true

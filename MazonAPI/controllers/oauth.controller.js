@@ -96,6 +96,7 @@ module.exports = {
         var state = req.params.state
         var client_type = req.params.client_type
         var code_challenge = req.params.code_challenge
+        var project_id = req.body.project_id
         var code_challenge_method = req.params.code_challenge_method
         var requesting_client = req.headers["user-agent"]
         var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
@@ -128,6 +129,7 @@ module.exports = {
                             redirect_uri: redirect_uri,
                             scopes: scopes,
                             state: state,
+                            project_id: project_id,
                             client_type: client_type,
                             code_challenge: code_challenge,
                             code_challenge_method: code_challenge_method,
@@ -171,6 +173,7 @@ module.exports = {
         var redirect_uri = req.body.redirect_uri;
         var code = req.body.authorization_code;
         var username = req.body.username;
+        var project_id = req.body.project_id
         var client_type = req.body.client_type
         var user_agent = req.headers["user-agent"]
         var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
@@ -214,6 +217,7 @@ module.exports = {
                         client_id: client_id,
                         grant_type: grant_type,
                         grant_value: code,
+                        project_id: project_id,
                         scopes: current_scopes,
                         username: username,
                         client_type: client_type,
@@ -228,6 +232,7 @@ module.exports = {
                         client_id: client_id,
                         grant_type: grant_type,
                         grant_value: code,
+                        project_id: project_id,
                         scopes: current_scopes,
                         username: username,
                         client_type: client_type,
@@ -265,6 +270,7 @@ module.exports = {
         const client_id = req.body.client_id
         const grant_type = "refresh_token"
         const refresh_token = req.body.refresh_token
+        const project_id = req.body.project_id
         const username_requested = req.body.username
         const client_type = req.body.client_type
         var user_agent = req.headers["user-agent"]
@@ -282,6 +288,7 @@ module.exports = {
                 expiry: access_token_expiry,
                 client_id: client_id,
                 grant_type: grant_type,
+                project_id: project_id,
                 grant_value: refresh_token,
                 scopes: refresh_token_check["scopes"],
                 username: username_requested,
@@ -320,10 +327,10 @@ module.exports = {
         })
         if(project_id_check["client_id"] == client_id && project_id_check["client_secret"] == client_secret){
             const access_token_deletion = await AccessToken.deleteMany({
-                "client_id": client_id
+                "project_id": project_id
             }).exec()
             const refresh_token_deletion = await RefreshToken.deleteMany({
-                "client_id": client_id
+                "project_id": project_id
             }).exec()
             if(access_token_deletion.ok && refresh_token_deletion.ok){
                 res.json({
@@ -352,7 +359,50 @@ module.exports = {
         var client_id = authorization_split[0]
         var client_secret = authorization_split[1]
         var project_id = req.body.project_id
-        
+        const project_id_check = await OauthClient.findOne({
+            "project_id": project_id
+        })
+        if(project_id_check["client_id"] == client_id && project_id_check["client_secret"] == client_secret){
+            const access_token_deletion = await AccessToken.deleteMany({
+                "project_id": project_id
+            }).exec()
+            const refresh_token_deletion = await RefreshToken.deleteMany({
+                "project_id": project_id
+            }).exec()
+            if(access_token_deletion.ok && refresh_token_deletion.ok){
+                const delete_query = await OauthClient.findOneAndUpdate({
+                    "project_id": project_id
+                }, {
+                    $set: {
+                        "isDeleted": true
+                    }
+                })
+                if(delete_query != undefined && delete_query != {}){
+                    res.json({
+                        "message": `Project ${project_id} Deleted`,
+                        "status": 200
+                    })
+                } else {
+                    res.status(500)
+                    res.json({
+                        "message": "Something seems to be wrong",
+                        "status": 500
+                    })
+                }
+            } else {
+                res.status(500)
+                res.json({
+                    "message": "Something seems to be wrong",
+                    "status": 500
+                })
+            }
+        } else {
+            res.status(401)
+            res.json({
+                "message": "Invalid Client Credentials. Unauthorized",
+                "status": 401
+            })
+        }
     }
 }
 
