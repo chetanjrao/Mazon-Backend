@@ -5,38 +5,26 @@
  * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
 
-
-
-
 var mongoose  = require('mongoose')
 var ordersMongoose = require('mongoose');
-var sampleMongoose = require('mongoose')
 var bcrypt = require('bcrypt')
 var globals = require('./modals/globals')
 const saltRounds = 10;
 const crypto = require('crypto')
-var jsonwebtoken = require('jsonwebtoken');
-var ordersConnection = ordersMongoose.createConnection('mongodb://localhost:27017/Orders', { useNewUrlParser: true, useCreateIndex: true })
-var express = require('express')
+const {
+    express,
+    app,
+    io,
+    http
+} = require('./helpers/root.helper')
 var sanitization = require('mongo-sanitize');
 var publicDirectory = require('path').join(__dirname, './public');
-var app = express()
 var uuid = require('uuid/v4')
 const GOLD_TIER_WALLET_PRICE = 800
 const SILVER_TIER_WALLET_PRICE = 500
 const BRONZE_TIER_WALLET_PRICE = 200
-const PER_BOOKING_POINTS = 30
-const PER_REVIEW_POINTS = 10
-/*************************** Bill Amount, Note *************/
 var nodeMailer = require('nodemailer')
 app.use(express.static(publicDirectory))
-var http = require('http').Server(app)
-var multer = require('multer')
-var socketio = require('socket.io')(http, {
-    path: '/secure/sockets',
-    serveClient: false,
-    cookie: "MazonSSC" //Mazon Secure Socket Connection
-})
 let bodyparser = require('body-parser')
 app.use(bodyparser.json())
 const key = new Buffer.alloc(16, "%Z_4$7x!A%D*G-Ka")
@@ -44,17 +32,15 @@ const iv = new Buffer.alloc(8, "?D(G+KbP");
 var mazonConnection = mongoose.createConnection("mongodb://localhost:27017/Mazon", { useNewUrlParser: true, useCreateIndex: true })
 var restaurants = require('./modals/Restaurant')
 var users = require('./modals/User')
-var oauth = mazonConnection.model('Oauth', require('./modals/Oauth'))
+var oauth = "mazonConnection.model('Oauth', require('./modals/Oauth'))"
 var bookings = require('./modals/Booking')
 var ratingReviews = require('./modals/RatingReview')
-exports.ratingReviews = ratingReviews;
 var wallet = mazonConnection.model('Wallet', require('./modals/Wallet'))
 var transaction = require('./modals/Transaction')
 var analytic = mazonConnection.model('Analytic', require('./modals/Analytics'))
-var socket = mazonConnection.model('Socket', require('./modals/Socket'))
-var combination = mazonConnection.model('Combination', require('./modals/Combinations'))
 var food = mazonConnection.model('Food', require('./modals/Food'))
 var inorder = require('./modals/Inorder')
+var sockets = require('./helpers/sockets.store')
 const emailTransporter = nodeMailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -66,6 +52,7 @@ const emailTransporter = nodeMailer.createTransport({
 })
 const RestaurantRouter = require('./routes/restaurant.route')
 const OauthRouter = require('./routes/oauth.route')
+const InorderRouter = require('./routes/inorder.route')
 app.use('/api/library/restaurants',RestaurantRouter)
 app.use('/api/secure/oauth2', OauthRouter)
 
@@ -74,53 +61,18 @@ app.get('/', function(req, res){
     res.send(client_secret)
 })
 
-/* 
-Web Socket Start
-*/
-socketio.on("connection",function(socketClient){
-    sockets.push(socketClient.id)
-    var deviceID = socketClient.handshake.headers["x-request-device-id"]
-    var accessToken = socketClient.handshake.headers["authorization"]
-    socketClient.on('newinorder', function(){
-        console.log('new inorder by : ' + socketClient.id)
-    })
-    socketio.to(sockets).emit('inorderrecieved', 'nikal laude')
-    // try{
-    //     var accessTokenDecrypted = DecryptForParams(accessToken)
-    //     var identity = accessTokenDecrypted.identity
-    //     oauth.findOne({ "accessToken": accessToken }, function(findErr, findResp){
-    //         if(findErr){
-    //             console.log(findErr)
-    //             socketClient.disconnect()
-    //         } else if(findResp){
-    //             socket.findOne({ "refID": identity }, function(soErr, soResp){
-    //                 if(soErr){
-    //                     console.log(soErr)
-    //                     socketClient.disconnect()
-    //                 } else if(soResp) {
-    //                     if(deviceID != soResp.deviceID){
-    //                         socket.updateOne({ "refID": identity }, { $set: { "deviceID": deviceID, "timeOfRecentConnection": new Date().toUTCString(), "connectionID": socketClient.id } }, function(updateErr, updateResp){
+io.on("connection",function(socket){
+    sockets[socket.handshake.headers["x-request-user"]] = socket.id
+    if(sockets["123@gmail.com"] != undefined){
+        console.log("emit")
+        io.sockets.connected[sockets["123@gmail.com"]].emit("inorder-complete", "Yes")
+    }
 
-    //                         })
-    //                     }
-    //                 } else {
-
-    //                 }
-    //             })
-    //         } else {
-    //             socketClient.emit('authErr')
-    //             socketClient.disconnect()
-    //         }
-    //     })
-    // }catch(err){
-    //     console.log(err)
-    // }
 })
 
-
-/* 
-Web Socket End
-*/
+io.on("inorder-process", (socket)=>{
+    console.log(`${socket}`)
+})
 
 
 
@@ -132,47 +84,6 @@ const TokenUsageTypes = {
     "BOOKING": 4,
     "PAYMENT": 5
 }
-// socketio.on('connection', function(socket){
-//     socket.on('disconnect', function(){
-//         console.log('disconnected')
-//     })
-// })
-
-
-app.post('/api/secure/menu/', function(req, res){
-    var menuToken = req.headers["x-mazon-menu-request-token"]
-    var accessToken = req.headers["authorization"]
-    var restaurantId = req.body.restaurantId
-    var menu = []
-    if(menuToken && accessToken && restaurantId != undefined){
-        restaurants.find({'_id': restaurantId }, function(err, response){
-            restaurantMenu = response[0].menu;
-            restaurantMenu.forEach(menuSingle => {
-                menu.push({
-                    name: menuSingle.fName,
-                    price: menuSingle.fPrice,
-                    veg: menuSingle.veg,
-                    fType: menuSingle.fType,
-                    image: menuSingle.fImage
-                })
-            });
-             res.send(menu)
-        })
-    } else {
-        res.status(403).json({
-            "message" : "Access Forbidden",
-            "status": 403
-        })
-    }
-
-})
-
-
-/********************* Login & Signup ***************************/
-
-app.post('/accounts/signin', function(req, res){
-    
-})
 
 app.get('/accounts/signup/emailVerifier/:emailVerificationToken', function(req, res){
     var emailVerificationToken = req.params.emailVerificationToken
@@ -646,20 +557,6 @@ function getUsernameAndPassword(base64DecodedString){
 }
 /********************** Login & Signup End  *********************/
 
-function checkAccessTokenEncryptionValidity(menuToken){
-    return true
-}
-function getAccessProfileTokens(headers){
-    return {
-        accessToken: headers["authorization"],
-        profileToken: headers["x-profileRequest-token"]
-    }
-}
-
-function accessTokenValidity(accessToken){
-    return true
-}
-
 function encrypt(text) {
     let cipher = crypto.createCipheriv('aes-128-ccm', Buffer.from(key), iv);
     let encrypted = cipher.update(text, );
@@ -906,18 +803,6 @@ function GenerateRandomID(length) {
         break;
     }
 })
-
-/************************* Food API */
-// app.get('/api/public/library/food/', function(req, res){
-//     var queryType = req.query.queryType
-//     switch(queryType){
-//         case "popular":
-//             break;
-//     }
-// })
-
-/******** Food API End */
-
 
 /************* Analytics API */
 app.post('/api/secure/analytics/restaurant', function(req, res){
@@ -1578,73 +1463,6 @@ function checkForInorderID(id){
     })
 }
 
-app.get('/api/library/menu/:restaurantID', /*CheckAccessTokenValidiy,*/ (req, res)=>{
-    try {
-        var finalResults = async() => {
-            var response = {
-                "1": [],
-                "2": [],
-                "3": [],
-                "4": [],
-                "5": [],
-                "6": [],
-                "7": [],
-                "8": [],
-                "9": [],
-                "10": [],
-                "11": [],
-                "12": [],
-                "13": [],
-                "14": [],
-            }
-        var restaurantID = req.params.restaurantID
-        const menu = food.find({ 'rId': restaurantID})
-        var findResp = await menu;
-        console.log(findResp)
-        if(findResp.length > 0){
-            async function getRatings(foodID){
-                try {
-                    return await ratingReviews.find({ 'reviewDest': foodID}).exec()
-                } catch(findERR) {
-                    return findERR
-                }
-                }
-                
-                var i = 0;
-                for(i=0; i<findResp.length; i++){
-                food = findResp[i]
-                const ratings = await getRatings(food._id)
-                response[`${food.category}`].push({
-                    "id": food._id,
-                    "name": food.name,
-                    "price": food.price,
-                    "image": food.image,
-                    "ratings": ratings,
-                    "isFeatured": food.isFeatured,
-                    "veg": food.veg
-                })
-            }
-            return response
-        }
-    }
-    finalResults().then(result => {
-        res.json(result)
-    }, (ress)=>console.log(ress)).catch(err => console.log(err))
-} catch(errMain){
-    throw "Error occured: " + errMain
-}
-})
-
-async function getRatingsReviews() {
-    try {
-        const result = await ratingReviews.find({}).exec();
-        return result;
-    }
-    catch {
-        return false;
-    }
-}
-
 app.use((err, req, res, next)=>{
     const error = app.get('env') === 'development' ? err : {}
     error.status = err.status || 500
@@ -1659,9 +1477,3 @@ app.use((err, req, res, next)=>{
 http.listen(9000, function(){
     console.log("Server started at localhost & listening on 9000");
   });
-
-const data = require('./extras/Data')
-
-app.get('/mainMenu', (req, res) => {
-    res.send(data)
-})

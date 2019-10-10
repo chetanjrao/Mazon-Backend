@@ -4,7 +4,8 @@ const {
 } = require('../helpers/dbHelper')
 const Menu = require('../modals/Menu')
 const {
-    check_restaurant
+    check_restaurant,
+    get_restaurant_owner_details
 } = require('./restaurant.service')
 const EXCLUDED_PROJECTIONS = { "menu.items.created_at": 0, "menu.items.updated_at": 0, "menu.items.updated_by": 0, "menu.items.created_by": 0  }
 
@@ -20,7 +21,12 @@ const getRestaurantMenu = async (restaurant_ID) => {
     const restaurant_menu = await Menu.findOne({
         "rId": restaurant_ID
     }, EXCLUDED_PROJECTIONS)
-    const menu = restaurant_menu["menu"]
+    const restaurant_details = await get_restaurant_owner_details(restaurant_ID)
+    const menu = {}
+    menu["restaurant_name"] = restaurant_details["name"]
+    menu["restaurant_phone"] = restaurant_details["phNo"]
+    menu["restaurant_email"] = restaurant_details["restaurantEmail"]
+    menu["menu"] = restaurant_menu["menu"]
     return menu
 }
 

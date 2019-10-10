@@ -24,7 +24,6 @@ var inOrderSchema = new Schema({
     ],
     order_date_time: {
         type: Date,
-        required: true,
         default: new Date()
     },
     order_status: { 

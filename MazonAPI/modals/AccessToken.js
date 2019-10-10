@@ -49,6 +49,10 @@ const AccessToken = new mongoose.Schema({
     user_ip: {
         type: String,
         required: true
+    },
+    created_at: {
+        type: Date,
+        default: new Date()
     }
 })
 

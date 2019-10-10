@@ -9,10 +9,16 @@ const mongoose = require('mongoose')
 const Restaurants = require('../modals/Restaurant')
 
 const check_restaurant = async (restaurantID) => {
-    const restaurant = await Restaurants.find({ "_id": restaurantID})
-    return restaurant != undefined && restaurant != {} ? true : false
+    const restaurant = await Restaurants.findOne({ "_id": restaurantID})
+    return restaurant != undefined && restaurant != {}
+}
+
+const get_restaurant_owner_details = async (restaurant_id) => {
+    const restaurant = await Restaurants.findOne({ "_id": restaurant_id})
+    return restaurant
 }
 
 module.exports = {
-    check_restaurant
+    check_restaurant,
+    get_restaurant_owner_details
 }

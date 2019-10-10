@@ -204,10 +204,10 @@ module.exports = {
                 if(now < expiry){
                     const current_scopes = oauth_client_check["scopes"]
                     var now_access = new Date()
-                    now_access.setHours(now_access.getHours() + 3)
+                    now_access.setDate(now_access.getDate() + 30)
                     const access_token_expiry = new Date(now_access)
                     const now_refresh = new Date()
-                    now_refresh.setDate(now_refresh.getDate() + 155)
+                    now_refresh.setDate(now_refresh.getDate() + 120)
                     const refresh_token_expiry = new Date(now_refresh)
                     const access_token = crypto.randomBytes(24).toString('hex')
                     const refresh_token = crypto.randomBytes(24).toString('hex')
