@@ -78,25 +78,6 @@ module.exports = {
                 id: element.id,
                 name: element.name,
                 address: element.address,
-                menu: element.menu.forEach(function(dish){
-                    var foodRatingsReviews = []
-                    Dishes.push({
-                        fId: dish.fId,
-                        fName: dish.fName,
-                        fPrice: dish.fPrice,
-                        fRatingReviews: dish.fRatingReviews.forEach(fRatingReview => {
-                            if(fRatingReview.isValid){
-                                foodRatingsReviews.push({
-                                    rId: fRatingReview.rId,
-                                    rUser: fRatingReview.rUser,
-                                    rRating: fRatingReview.rRating,
-                                    rTime: fRatingReview.rTime,
-                                })
-                            }
-                        }),
-                        foodRatingReviews: foodRatingsReviews
-                    })
-                }),
                 dishes: Dishes,
                 images: element.images, 
                 priceForTwo: element.priceForTwo,
@@ -109,12 +90,7 @@ module.exports = {
                 offers: element.offers,
                 noOfTables: element.noOfTables,
                 description: element.description,
-                ratings: element.ratingReviews.forEach(rating => {
-                    if(rating.isValid){
-                        ratingFinal += rating["rating"]
-                        reviewCount += 1
-                    }
-                }),
+                ratings: "5",
                 ratings: ratingFinal/reviewCount,
                 reviews: element.ratingReviews,
                 cuisines: element.cuisines,

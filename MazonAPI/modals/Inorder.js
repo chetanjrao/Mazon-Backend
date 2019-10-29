@@ -2,23 +2,27 @@ var mongoose  = require('mongoose')
 var Schema = mongoose.Schema
 
 var inOrderSchema = new Schema({
-    r_id: {
-        type: mongoose.Schema.Types.ObjectId,
+    rId: {
+        type: String,
         required: true
     },
-    r_table: {
+    rTable: {
         type: Number,
         required: true
     },
     menu: [
         {
-            id: {
+            fId: {
                 type: String,
                 required: true
             },
             quantity: {
                 type: Number,
                 required: true
+            },
+            isHalf: {
+                type: Boolean,
+                default: false
             }
         }
     ],

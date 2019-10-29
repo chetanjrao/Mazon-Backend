@@ -13,7 +13,7 @@ const BookingSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    restaurant: {
+    rId: {
         type: String,
         required: true
     },

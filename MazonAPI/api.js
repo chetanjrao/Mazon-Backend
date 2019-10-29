@@ -635,15 +635,7 @@ function GenerateRandomID(length) {
                             name: restaurant.name,
                             address: restaurant.address,
                             locality: restaurant.locality,
-                            ratings: restaurant.ratingReviews.forEach(rating => {
-                                if(rating.isValid){
-                                    ratingFinal += rating["rating"]
-                                    reviewCount += 1
-                                } else {
-                                    reviewCount = 0
-                                }
-                            }),
-                            ratings: (ratingFinal/reviewCount).toFixed(1),
+                            ratings: "5",
                             priceForTwo: restaurant.priceForTwo,
                             images: "http://localhost:9000//images/restaurants/"+ restaurant.images[0], 
                             reviewsCount: reviewCount

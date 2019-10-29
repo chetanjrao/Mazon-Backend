@@ -12,7 +12,7 @@ const {
 } = require('../helpers/dbHelper')
 
 var restaurantSchema = new Schema({
-    id: {
+    rId: {
         type: Number,
         required: true,
         unique: true
@@ -53,71 +53,14 @@ var restaurantSchema = new Schema({
         type: Number,
         default: 10
     },
-    menu: [
-        {
-            fImage: {
-                type: String,
-                data: Buffer
-            },
-            isPopular: {
-                type: String,
-                required: true,
-                default: false
-            },
-            fName: {
-                type: String,
-                required: true
-            },
-            fDescription: {
-                type: String,
-                required: true
-            },
-            fPrice: {
-                type: Number,
-                required: true
-            },
-            fHalfPrice: {
-                type: Number
-            },
-            veg: {
-                type: Boolean,
-                required: true
-            },
-            fType: {
-                type: Number,
-                required: true
-            },
-            fCustom: {
-                type: Boolean,
-                default: false
-            },
-            fRatingReviews: [
-                {
-                    rId: Number,
-                    rUser: Number,
-                    rRating: Number,
-                    rReview: String,
-                    rTime: {
-                        type: Date,
-                        default: Date.now
-                    },
-                    isValid: {
-                        type: Boolean,
-                        default: true
-                    }
-                }
-            ]
-        }
-    ],
     images: {
-        type: Array,
+        type: [String],
         required: true
     },
     priceForTwo: {
         type: Number,
         required: true
     },
-    combos: [Number],
     coordinates: {
         latitude: {
             type: String,
@@ -144,6 +87,7 @@ var restaurantSchema = new Schema({
         type: String,
         required: true
     },
+    //isOpen
     timing: {
         openTime: {
             type: String,
@@ -158,7 +102,7 @@ var restaurantSchema = new Schema({
         type: Number,
         required: true
     },
-    offers: [Number],
+    offers: [String],
     description: {
         type: String,
         required: true
@@ -167,24 +111,8 @@ var restaurantSchema = new Schema({
         type: Number,
         required: true
     },
-    ratingReviews: [
-        {
-            id: Number,
-            user: Number,
-            rating: Number,
-            review: String,
-            time: {
-                type: Date,
-                default: Date.now
-            },
-            isValid: {
-                type: Boolean,
-                default: false
-            }
-        }
-    ],
-    cuisines: [Number],
-    facilities: [Number],
+    cuisines: [String],
+    facilities: [String],
     onBoardTime: {
         type: Date,
         default: new Date()
