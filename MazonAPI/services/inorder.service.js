@@ -7,20 +7,18 @@ const {
 const {
     get_restaurant_owner_details
 } = require('./restaurant.service')
-INORDER_EXCLUDED_PROJECTIONS = {"order_token": 0,  }
 const {
     io
 } = require('../helpers/root.helper')
 var sockets = require('../helpers/sockets.store')
 
-const place_inorder = async (restaurant_id, table_no, menu, order_reference, order_token, offer_applied, name, phone, email) => {
+const place_inorder = async (restaurant_id, table_no, menu, order_token, offer_applied, name, phone, email) => {
     const inorder_query = new Inorder({
-        r_id: restaurant_id,
-        r_table: table_no,
+        rId: restaurant_id,
+        rTable: table_no,
         menu: menu,
         order_date_time: new Date(),
         order_status: 1,
-        order_reference: order_reference,
         order_token: order_token,
         offer_applied: offer_applied,
         name: name,
@@ -28,52 +26,52 @@ const place_inorder = async (restaurant_id, table_no, menu, order_reference, ord
         email: email
     })
     const new_inorder = await inorder_query.save()
-    if(new_inorder != undefined && new_inorder != {}){
-        const user_socket = io.sockets.connected[sockets[`${email}`]]
-        const partner_details = await get_restaurant_owner_details(restaurant_id)
-        const partner_socket = io.sockets.connected[sockets[`${partner_details['restaurantEmail']}`]]
-        if(user_socket != undefined){
-            user_socket.emit('inorder-placed', `Your Inorder at ${partner_details['name']} at Table No. ${table_no} has been placed. Your reference id is ${order_reference}`)
-        }
-        if(partner_socket != undefined){
-            partner_socket.emit('new-inorder', {
-                "order_reference": order_reference 
-            })
-        }
-        return true
-    }
+    return new_inorder
 }
 
-const show_inorder = async (order_reference) => {
+const show_inorder = async (order_id) => {
     const inorder = await Inorder.findOne({
-        "order_reference": order_reference
+        "_id": order_id
     }, {})
     return inorder
 }
 
-const finish_inorder = async (order_reference) => {
+const finish_inorder = async (order_id) => {
+    const inorder = await show_inorder(order_id)
+    const updated_inorder = await inorder.update({
+        $set: {
+            "order_status": 5
+        }
+    })
+    return updated_inorder
+}
+
+const add_payment = async (order_id, payment_mode, amount) => {
     
 }
 
-const edit_inorder = async (order_reference, items) => {
-
+const update_inorder = async (order_id, update_status, updated_by) => {
+    const inorder = await show_inorder(order_id)
+    const updated_order = await inorder.update({
+        $set: {
+            "order_status": update_status,
+            "last_updated_by": updated_by
+        }
+    })
+    return updated_order
 }
 
-const add_payment = async (order_reference, payment_mode, amount) => {
-
-}
-
-const get_final_price = async (order_reference) => {
-    const inorder = await show_inorder(order_reference)
+const get_final_price = async (order_id) => {
+    const inorder = await show_inorder(order_id)
     const calculated_amount = await calculate_amount(inorder["r_id"], inorder["items"])
 }
 
 const calculate_amount = async (restaurant_id, items) => {
     var amount = 0
     for(var i=0; i<items.length;i++){
-        var food = await get_particular_food_details(restaurant_id, items[i]["_id"])
-        var price = food["price"]
-        var food_amount = Number.parseFloat(price) * Number.parseFloat(items[i]*quantity)
+        var food = await get_particular_food_details(restaurant_id, items[i]["cId"], items[i]["fId"])
+        var price = items[i]["isHalf"] && food["halfPrice"] != undefined ? food["halfPrice"] : food["price"]
+        var food_amount = Number.parseFloat(price) * Number.parseFloat(items[i]['quantity'])
         amount += Number.parseFloat(food_amount)
     }
     return amount
@@ -82,8 +80,9 @@ const calculate_amount = async (restaurant_id, items) => {
 module.exports = {
     calculate_amount,
     place_inorder,
-    edit_inorder,
     add_payment,
     show_inorder,
-    finish_inorder
+    finish_inorder,
+    update_inorder,
+    get_final_price
 }

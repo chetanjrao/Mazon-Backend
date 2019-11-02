@@ -1,4 +1,7 @@
 var mongoose  = require('mongoose')
+const {
+    resources
+} = require("../helpers/dbHelper")
 var Schema = mongoose.Schema
 
 var inOrderSchema = new Schema({
@@ -12,6 +15,10 @@ var inOrderSchema = new Schema({
     },
     menu: [
         {
+            cId: {
+                type: String,
+                required: true
+            },
             fId: {
                 type: String,
                 required: true
@@ -42,16 +49,12 @@ var inOrderSchema = new Schema({
         default: 1,
         required: true
     },
-    order_reference: { 
-        type: String,
-        required: true
-    },
     order_token: {
         type: String,
         required: true
     },
     offer_applied: {
-        type: String// Offer Object ID applied
+        type: String
     },
     payment_mode: {
         type: String
@@ -71,9 +74,12 @@ var inOrderSchema = new Schema({
     email: {
         type: String,
         required: true
+    },
+    last_updated_by: {
+        type: String
     }
 })
 
-const InorderModel = mongoose.model('Inorder', inOrderSchema)
+const InorderModel = resources.model('Inorder', inOrderSchema)
 
 module.exports = InorderModel

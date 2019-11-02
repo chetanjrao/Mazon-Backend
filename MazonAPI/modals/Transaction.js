@@ -12,24 +12,48 @@ const {
 } = require('../helpers/dbHelper')
 
 const TransactionSchema = new Schema({
-    transactionID: {
+    reference: {
         type: String,
+        required: true
     },
-    purpose: {
-        type: String
+    user: {
+        type: String,
+        required: true
+    },
+    message: {
+        type: String,
+        required: true
     },
     amount: {
-        type: String
+        type: Number,
+        required: true
     },
     type: {
         type: String, //1) CREDIT 2)DEBIT
         required: true
     },
-    dateTime: {
-        type: String
+    created_at: {
+        type: Date,
+        default: new Date()
+    },
+    coordinates: {
+        latitude: {
+            type: String
+        },
+        longitude: {
+            type: String
+        }
+    },
+    is_op_success: {
+        type: Boolean
     },
     ip: {
-        type: String
+        type: String,
+        required: true
+    },
+    user_agent: {
+        type: String,
+        required: true
     }
 })
 

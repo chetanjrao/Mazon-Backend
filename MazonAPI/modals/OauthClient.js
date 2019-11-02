@@ -6,6 +6,9 @@
  */
 
 const mongoose = require('mongoose')
+const {
+    resources
+} = require("../helpers/dbHelper")
 
 const OauthSchema = new mongoose.Schema({
     client_id: {
@@ -74,6 +77,6 @@ const OauthSchema = new mongoose.Schema({
     }
 })
 
-const OauthClient = mongoose.model('OauthClient', OauthSchema)
+const OauthClient = resources.model('OauthClient', OauthSchema)
 
 module.exports = OauthClient

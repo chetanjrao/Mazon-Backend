@@ -6,6 +6,9 @@
  */
 
 const mongoose = require('mongoose')
+const {
+    resources
+} = require("../helpers/dbHelper")
 
 const RefreshToken = new mongoose.Schema({
     refresh_token: {
@@ -63,6 +66,6 @@ const RefreshToken = new mongoose.Schema({
     }
 })
 
-const RefreshTokenModel = mongoose.model('RefreshToken', RefreshToken)
+const RefreshTokenModel = resources.model('RefreshToken', RefreshToken)
 
 module.exports = RefreshTokenModel

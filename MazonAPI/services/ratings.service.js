@@ -70,7 +70,7 @@ const post_rating_review = async (destination, type, rating, review, user, apeti
 }
 
 const update_rating_review = async (review_id, rating, review, apetite, satisfaction) => {
-    const noew = new Date()
+    const now = new Date()
     const updated_rating = await RatingReviews.updateOne({
         "_id": review_id
     }, {
@@ -82,9 +82,41 @@ const update_rating_review = async (review_id, rating, review, apetite, satisfac
 
 }
 
+const get_particular_rating_review = async (rating_id) => {
+    const rating_review = await RatingReviews.findOne({
+        "_id": rating_id
+    })
+    return rating_review
+}
+
+const disable_rating_review = async (rating_id, updated_by) => {
+    const rating = await get_particular_rating_review(rating_id)
+     const updated_document = await rating.updateOne({
+         $set: {
+            isValid: false,
+            updated_at: new Date(),
+            updated_by: updated_by
+         }
+     })
+     return updated_document
+}
+
+const delete_rating_review = async (rating_id, deleted_by) => {
+    const rating = await get_particular_rating_review(rating_id)
+     const deleted_document = await rating.updateOne({
+         $set: {
+            isRemoved: true,
+            updated_at: new Date(),
+            updated_by: deleted_by
+         }
+     })
+     return deleted_document
+}
 
 module.exports = {
     getRestaurantRatingReviews,
     post_rating_review,
-    update_rating_review
+    update_rating_review,
+    disable_rating_review,
+    delete_rating_review
 }

@@ -1,26 +1,28 @@
 const mongoose = require('mongoose');
+const {
+    resources
+} = require("../helpers/dbHelper")
 const Schema = mongoose.Schema
-const Wallet = new Schema({
-    uID: {
+const WalletSchema = new Schema({
+    u_id: {
         type: String,
         required: true
     },
-    wID: {
+    w_id: {
         type: String,
         required: true
     },
-    walletAccessToken: {
-        type: String,
-        required: true
-    },
-    walletPoints: {
+    wallet_points: {
         type: Number,
         required: true
     },
     history: [String],
-    lastTransactionTime: {
-        type: String
+    last_transaction_time: {
+        type: Date,
+        default: new Date()
     }
 })
+
+const Wallet = resources.model("Wallet", WalletSchema)
 
 module.exports = Wallet

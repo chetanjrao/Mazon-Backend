@@ -1,4 +1,7 @@
 const mongoose = require('mongoose')
+const {
+    resources
+} = require("../helpers/dbHelper")
 
 const OauthAuthorizationSchema = new mongoose.Schema({
     client_id: {
@@ -36,8 +39,7 @@ const OauthAuthorizationSchema = new mongoose.Schema({
         required: true
     },
     referrer: {
-        type: String,
-        required: true
+        type: String
     },
     authorization_code: {
         type: String,
@@ -57,6 +59,6 @@ const OauthAuthorizationSchema = new mongoose.Schema({
     }
 })
 
-const OauthAuthorization = mongoose.model('OauthAuthorization', OauthAuthorizationSchema)
+const OauthAuthorization = resources.model('OauthAuthorization', OauthAuthorizationSchema)
 
 module.exports = OauthAuthorization

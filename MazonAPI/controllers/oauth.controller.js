@@ -48,9 +48,11 @@ module.exports = {
                     ]
                 });
                 if(oauth_check.length > 0){
-                    const err = new Error("Oauth Client already present. Invalid Project ID or Package Indentifier")
-                    err.status = 403
-                   next(err)
+                    res.status(403)
+                    res.json({
+                        "message": "Oauth Client already present. Invalid Project ID or Package Indentifier",
+                        "status": "403"
+                    })
                 } else {
                     var client_id = project_id + ".mazonapp.com"
                     var client_secret = crypto.randomBytes(16).toString('hex')
@@ -69,7 +71,7 @@ module.exports = {
                         developer_name: developer_name
                     })
                     const oauth_client = await newOauthClient.save()
-                    if (oauth_client != undefined && oauth_client != {})
+                    if (oauth_client["_id"] != undefined)
                     res.json({
                         "message": "Client Registered",
                         "status": 201,
@@ -86,23 +88,24 @@ module.exports = {
     authorize: async (req, res, next) => {
         const response_type = 'code'
         var authorization_header = req.headers.authorization
-        var authorization_string = authorization_header.substring(5, authorization_header.length)
-        var authorization_split = authorization_string.split(':')
+        var authorization_string = authorization_header.substring(6, authorization_header.length)
+        var authorizationdecoded = decodeBase64toString(authorization_string)
+        var authorization_split = authorizationdecoded.split(':')
         var username = authorization_split[0]
         var password = authorization_split[1]
-        var client_id = req.params.clientid
-        var redirect_uri = req.params.redirect_uri
-        var scopes = req.params.scopes
-        var state = req.params.state
-        var client_type = req.params.client_type
-        var code_challenge = req.params.code_challenge
+        var client_id = req.body.client_id
+        var redirect_uri = req.body.redirect_uri
+        var scopes = req.body.scopes
+        var state = req.body.state
+        var client_type = req.body.client_type
+        var code_challenge = req.body.code_challenge
         var project_id = req.body.project_id
-        var code_challenge_method = req.params.code_challenge_method
+        var code_challenge_method = req.body.code_challenge_method
         var requesting_client = req.headers["user-agent"]
         var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
         var referrer = req.headers.referrer || req.headers.referer
         const oauth_client_check = await OauthClient.findOne({'client_id': client_id})
-        if(oauth_client_check != undefined || oauth_client_check == {}){
+        if(oauth_client_check == null){
             const error = new Error("Requested Oauth client does not exist")
             error.status = 400
             next(error)
@@ -110,7 +113,7 @@ module.exports = {
             const user = await Users.findOne({
                 'email': username
             })
-            if(user != undefined || user == {}){
+            if(user == null){
                 const error = new Error("Invalid Username/Password")
                 error.status = 401
                 next(error)
@@ -121,9 +124,8 @@ module.exports = {
                     const now = new Date()
                     now.setMinutes(now.getMinutes() + 5)
                     const expiry = new Date(now);
-                    const parsed_scopes = JSON.parse(scopes)
                     const client_scopes = oauth_client_check["scopes"]
-                    if(checkScopes(parsed_scopes, client_scopes)){
+                    if(checkScopes(scopes, client_scopes)){
                         const newOuthAuthorization = new OauthAuthorization({
                             client_id: client_id,
                             redirect_uri: redirect_uri,
@@ -140,8 +142,8 @@ module.exports = {
                             identity: username,
                             user_ip: ip
                         })
-                        const oauth_auth_code = newOuthAuthorization.save()
-                        if(oauth_auth_code != undefined && oauth_auth_code != {}){
+                        const oauth_auth_code = await newOuthAuthorization.save()
+                        if(oauth_auth_code["_id"] != undefined){
                             res.json({
                                 "message": "Authorization Code valid for 5 minutes",
                                 "response_type": response_type,
@@ -171,93 +173,163 @@ module.exports = {
         var client_id = req.body.client_id;
         var client_secret = req.body.client_secret;
         var redirect_uri = req.body.redirect_uri;
-        var code = req.body.authorization_code;
+        var code_verifier = req.body.code_verifier;
+        var code = req.body.code;
         var username = req.body.username;
         var project_id = req.body.project_id
         var client_type = req.body.client_type
         var user_agent = req.headers["user-agent"]
         var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
         const oauth_client_check = await OauthClient.findOne({
-            "$and": [
-                {
-                    "client_id": client_id
-                },
-                {
-                    "client_secret": client_secret
-                }
-            ]
+            "client_id": client_id,
+            "client_secret": client_secret
         })
-        if(oauth_client_check != undefined && oauth_client_check != {}){
+        if(oauth_client_check != null){
             const code_docs_check = await OauthAuthorization.findOne({
-                "$and": [
-                    {
-                        'authorization_code': code
-                    },
-                    {
-                        "client_id": client_id
-                    }
-                ]
+                'authorization_code': code,
+                "client_id": client_id
             })
-            if(code_docs_check != undefined && code_docs_check != {}){
-                var expiry = code_docs_check["expires_in"]
-                const now = new Date()
-                if(now < expiry){
-                    const current_scopes = oauth_client_check["scopes"]
-                    var now_access = new Date()
-                    now_access.setDate(now_access.getDate() + 30)
-                    const access_token_expiry = new Date(now_access)
-                    const now_refresh = new Date()
-                    now_refresh.setDate(now_refresh.getDate() + 120)
-                    const refresh_token_expiry = new Date(now_refresh)
-                    const access_token = crypto.randomBytes(24).toString('hex')
-                    const refresh_token = crypto.randomBytes(24).toString('hex')
-                    const new_access_token = new AccessToken({
-                        access_token: access_token,
-                        expiry: access_token_expiry,
-                        client_id: client_id,
-                        grant_type: grant_type,
-                        grant_value: code,
-                        project_id: project_id,
-                        scopes: current_scopes,
-                        username: username,
-                        client_type: client_type,
-                        token_type: "bearer",
-                        user_agent: user_agent,
-                        user_ip: ip
-                    })
-                    const access_token_document = await new_access_token.save()
-                    const new_refresh_token = new RefreshToken({
-                        refresh_token: refresh_token,
-                        expiry: refresh_token_expiry,
-                        client_id: client_id,
-                        grant_type: grant_type,
-                        grant_value: code,
-                        project_id: project_id,
-                        scopes: current_scopes,
-                        username: username,
-                        client_type: client_type,
-                        token_type: "refresh",
-                        user_agent: user_agent,
-                        user_ip: ip
-                    })
-                    const refresh_token_document = await new_refresh_token.save()
-                    if((access_token_document != undefined && access_token_document != {}) && (refresh_token_document != undefined && refresh_token_document != {})){
-                        res.json({
-                            "scopes": current_scopes,
-                            "expiry": access_token_expiry,
-                            "token_type": "bearer",
-                            "access_token": access_token,
-                            "refresh_token": refresh_token
-                        })
+            if(code_docs_check != null){
+                if(code_docs_check["code_challenge_method"] == "plain"){
+                    if(code_verifier == code_docs_check["code_challenge"]){
+                        var expiry = code_docs_check["expires_in"]
+                        const now = new Date()
+                        if(now < expiry){
+                            const current_scopes = oauth_client_check["scopes"]
+                            var now_access = new Date()
+                            now_access.setDate(now_access.getDate() + 45)
+                            const access_token_expiry = new Date(now_access)
+                            const now_refresh = new Date()
+                            now_refresh.setDate(now_refresh.getDate() + 120)
+                            const refresh_token_expiry = new Date(now_refresh)
+                            const access_token = crypto.randomBytes(24).toString('hex')
+                            const refresh_token = crypto.randomBytes(24).toString('hex')
+                            const new_access_token = new AccessToken({
+                                access_token: access_token,
+                                expiry: access_token_expiry,
+                                client_id: client_id,
+                                grant_type: grant_type,
+                                grant_value: code,
+                                project_id: project_id,
+                                scopes: current_scopes,
+                                username: username,
+                                client_type: client_type,
+                                token_type: "bearer",
+                                user_agent: user_agent,
+                                user_ip: ip
+                            })
+                            const access_token_document = await new_access_token.save()
+                            const new_refresh_token = new RefreshToken({
+                                refresh_token: refresh_token,
+                                expiry: refresh_token_expiry,
+                                client_id: client_id,
+                                grant_type: grant_type,
+                                grant_value: code,
+                                project_id: project_id,
+                                scopes: current_scopes,
+                                username: username,
+                                client_type: client_type,
+                                token_type: "refresh",
+                                user_agent: user_agent,
+                                user_ip: ip
+                            })
+                            const refresh_token_document = await new_refresh_token.save()
+                            if((access_token_document["_id"] != undefined) && (refresh_token_document["_id"] != undefined)){
+                                res.json({
+                                    "scopes": current_scopes,
+                                    "expiry": access_token_expiry,
+                                    "token_type": "bearer",
+                                    "access_token": access_token,
+                                    "refresh_token": refresh_token
+                                })
+                            } else {
+                                const error = new Error("Internal Server Error")
+                                error.status = 500
+                                next(error)
+                            }
+                        } else {
+                            const error = new Error("Authorization Code Expired")
+                            error.status = 400
+                            next(error)
+                        }
                     } else {
-                        const error = new Error("Internal Server Error")
-                        error.status = 500
-                        next(error)
+                        //TODO: Revoke client
+                        res.json({
+                            "message": "Beta baap ko chutiya mat banao",
+                            "status": 403
+                        })
                     }
-                } else {
-                    const error = new Error("Authorization Code Expired")
-                    error.status = 400
-                    next(error)
+                } else if(code_docs_check["code_challenge_method"] === "S256") {
+                    const hash = crypto.createHash("sha256").update(code_verifier).digest("hex")
+                    const hash_encoded = Buffer.from(hash).toString("base64")
+                    if(hash_encoded == code_docs_check["code_challenge"]){
+                        var expiry = code_docs_check["expires_in"]
+                        const now = new Date()
+                        if(now < expiry){
+                            const current_scopes = oauth_client_check["scopes"]
+                            var now_access = new Date()
+                            now_access.setDate(now_access.getDate() + 45)
+                            const access_token_expiry = new Date(now_access)
+                            const now_refresh = new Date()
+                            now_refresh.setDate(now_refresh.getDate() + 120)
+                            const refresh_token_expiry = new Date(now_refresh)
+                            const access_token = crypto.randomBytes(24).toString('hex')
+                            const refresh_token = crypto.randomBytes(24).toString('hex')
+                            const new_access_token = new AccessToken({
+                                access_token: access_token,
+                                expiry: access_token_expiry,
+                                client_id: client_id,
+                                grant_type: grant_type,
+                                grant_value: code,
+                                project_id: project_id,
+                                scopes: current_scopes,
+                                username: username,
+                                client_type: client_type,
+                                token_type: "bearer",
+                                user_agent: user_agent,
+                                user_ip: ip
+                            })
+                            const access_token_document = await new_access_token.save()
+                            const new_refresh_token = new RefreshToken({
+                                refresh_token: refresh_token,
+                                expiry: refresh_token_expiry,
+                                client_id: client_id,
+                                grant_type: grant_type,
+                                grant_value: code,
+                                project_id: project_id,
+                                scopes: current_scopes,
+                                username: username,
+                                client_type: client_type,
+                                token_type: "refresh",
+                                user_agent: user_agent,
+                                user_ip: ip
+                            })
+                            const refresh_token_document = await new_refresh_token.save()
+                            if((access_token_document["_id"] != undefined) && (refresh_token_document["_id"] != undefined)){
+                                res.json({
+                                    "scopes": current_scopes,
+                                    "expiry": access_token_expiry,
+                                    "token_type": "bearer",
+                                    "access_token": access_token,
+                                    "refresh_token": refresh_token
+                                })
+                            } else {
+                                const error = new Error("Internal Server Error")
+                                error.status = 500
+                                next(error)
+                            }
+                        } else {
+                            const error = new Error("Authorization Code Expired")
+                            error.status = 400
+                            next(error)
+                        }
+                    } else {
+                        //TODO: Revoke client
+                        res.json({
+                            "message": "Beta baap ko chutiya mat banao",
+                            "status": 403
+                        })
+                    }
                 }
             }
         } else {
@@ -267,6 +339,7 @@ module.exports = {
         }
     },
     refresh: async (req, res, next) => {
+        //some prechecks need to be added
         const client_id = req.body.client_id
         const grant_type = "refresh_token"
         const refresh_token = req.body.refresh_token
@@ -278,10 +351,10 @@ module.exports = {
         const refresh_token_check = await RefreshToken.findOne({
             "refresh_token": refresh_token
         })
-        if(refresh_token_check != undefined && refresh_token_check != {}){
+        if(refresh_token_check["_id"] != undefined){
             const generated_access_token = crypto.randomBytes(24).toString('hex')
             const now = new Date()
-            now.setHours(now.getHours() + 5)
+            now.setDate(now.getDate() + 60)
             const access_token_expiry = new Date(now)
             const new_access_token_query = new AccessToken({
                 access_token: generated_access_token,
@@ -298,7 +371,7 @@ module.exports = {
                 user_ip: ip
             })
             const new_access_token = await new_access_token_query.save()
-            if(new_access_token != undefined && new_access_token != {}){
+            if(new_access_token["_id"] != undefined){
                 res.json({
                     "scopes": refresh_token_check["scopes"],
                     "expiry": access_token_expiry,
@@ -377,7 +450,7 @@ module.exports = {
                         "isDeleted": true
                     }
                 })
-                if(delete_query != undefined && delete_query != {}){
+                if(delete_query["_id"] != undefined){
                     res.json({
                         "message": `Project ${project_id} Deleted`,
                         "status": 200

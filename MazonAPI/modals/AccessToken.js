@@ -1,4 +1,7 @@
 const mongoose = require('mongoose')
+const {
+    resources
+} = require("../helpers/dbHelper")
 
 const AccessToken = new mongoose.Schema({
     access_token: {
@@ -56,6 +59,6 @@ const AccessToken = new mongoose.Schema({
     }
 })
 
-const AccessTokenModel = mongoose.model('AccessToken', AccessToken)
+const AccessTokenModel = resources.model('AccessToken', AccessToken)
 
 module.exports = AccessTokenModel

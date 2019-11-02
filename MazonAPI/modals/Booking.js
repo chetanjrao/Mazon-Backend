@@ -61,8 +61,7 @@ const BookingSchema = new mongoose.Schema({
          * 5-> Cancelled
          */
         type: Number,
-        required: true,
-        default: 0
+        default: 1
     },
     is_paid: {
         type: Boolean,

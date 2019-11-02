@@ -30,11 +30,11 @@ const getRestaurantMenu = async (restaurant_ID) => {
     return menu
 }
 
-const get_particular_food_details = async (restaurant_id, food_id) => {
-    const food = await Menu.findOne({
-        "rID": restaurant_id,
-        "menu.items._id": food_id
+const get_particular_food_details = async (restaurant_id, category_index, food_index) => {
+    const food_document = await Menu.findOne({
+            "rId": restaurant_id
     })
+    const food = food_document["menu"][category_index]["items"][food_index]
     return food
 }
 

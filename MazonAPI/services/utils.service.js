@@ -8,9 +8,6 @@ const generate_unique_identifier = (count) => {
     return result;
 }
 
-const = () => {
-    
-}
 
 module.exports = {
     generate_unique_identifier
