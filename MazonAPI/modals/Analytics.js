@@ -1,15 +1,59 @@
 const mongoose = require('mongoose')
+const {
+    resources
+} = require("../helpers/dbHelper")
 
-const Analytic = new mongoose.Schema({
-    destinationID: {
+const AnalyticsSchema = new mongoose.Schema({
+    reference: {
         type: String,
         required: true
     },
-    clicks: [String], // The time stamp converted to Indian Time will get inserted
-    inorders: [String],
-    bookings: [String],
-    ratingReviews: [String],
-    scans: [String]
+    clicks: [
+        {
+            user: {
+                type: String
+            },
+            time: {
+                type: Date
+            }
+        }
+    ],
+    inorders: [
+        {
+            user: {
+                type: String
+            },
+            time: {
+                type: Date
+            }
+        }
+    ],
+    bookings: [{
+        user: {
+            type: String
+        },
+        time: {
+            type: Date
+        }
+    }],
+    ratingReviews: [{
+        user: {
+            type: String
+        },
+        time: {
+            type: Date
+        }
+    }],
+    scans: [{
+        user: {
+            type: String
+        },
+        time: {
+            type: Date
+        }
+    }]
 }) 
 
-module.exports = Analytic
+const Analytics = resources.model("Analytics", AnalyticsSchema)
+
+module.exports = Analytics

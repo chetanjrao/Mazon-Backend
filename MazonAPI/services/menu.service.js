@@ -1,7 +1,9 @@
-const mongoose = require('mongoose')
-const {
-    resources
-} = require('../helpers/dbHelper')
+/*
+ * Created on Tue Nov 05 2019
+ *
+ * Author - Chethan Jagannatha Kulkarni, CTO, Mazon Services Pvt. Ltd. 
+ * Copyright (c) 2019 Mazon Services Pvt. Ltd.
+ */
 const Menu = require('../modals/Menu')
 const {
     check_restaurant,

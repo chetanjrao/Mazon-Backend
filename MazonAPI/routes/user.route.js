@@ -10,5 +10,8 @@ const {
 } = require("../controllers/user.controller")
 
 router.route("/signin").post(signin)
+router.route("/signup").post(signin)
+router.route("/update").post(signin)
+router.route("/delete").delete(signin)
 
 module.exports = router

@@ -1,4 +1,3 @@
-const mongoose = require('mongose')
 const Transactions = require('../modals/Transaction.js')
 const { generate_unique_identifier } = require('./utils.service')
 

@@ -11,7 +11,6 @@ const router = express.Router()
 const restaurantController = require('../controllers/restaurant.controller')
 const ratings_controller = require('../controllers/rating.controller')
 const menu_controller = require('../controllers/menu.controller')
-//const router = require('express-promise-router')();
 
 router.route('/').get(restaurantController.index)
 

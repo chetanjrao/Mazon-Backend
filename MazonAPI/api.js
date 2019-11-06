@@ -8,6 +8,7 @@
 var mongoose  = require('mongoose')
 var ordersMongoose = require('mongoose');
 var bcrypt = require('bcrypt')
+require("dotenv").config()
 const {
     express,
     app,
@@ -20,15 +21,7 @@ var nodeMailer = require('nodemailer')
 app.use(express.static(publicDirectory))
 let bodyparser = require('body-parser')
 app.use(bodyparser.json())
-const emailTransporter = nodeMailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-        user: "1by17ec037@bmsit.in",
-        pass: "Chethanwins@2025"
-    }
-})
+
 const RestaurantRouter = require('./routes/restaurant.route')
 const OauthRouter = require('./routes/oauth.route')
 const InorderRouter = require('./routes/inorder.route')

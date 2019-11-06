@@ -12,7 +12,7 @@ const get_user_details = async (userID) => {
             }
         ]
     })
-    if(user != undefined && user != {}){
+    if(user["_id"] != undefined){
         return {
             "email": user["email"],
             "mobile": user["mobile"],

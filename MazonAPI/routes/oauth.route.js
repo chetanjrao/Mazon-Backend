@@ -6,7 +6,7 @@ router.route('/register').post(OauthController.register)
 router.route('/authorize').post(OauthController.authorize)
 router.route('/token').post(OauthController.token)
 router.route('/refresh').post(OauthController.refresh)
-router.route('/revoke').post(OauthController.revoke)
-router.route('/delete').post(OauthController.delete)
+router.route('/revoke').patch(OauthController.revoke)
+router.route('/delete').delete(OauthController.delete)
 
 module.exports = router

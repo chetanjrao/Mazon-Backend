@@ -1,6 +1,8 @@
 /*
- *   Copyright (c) 2019 
- *   All rights reserved.
+ * Created on Tue Nov 05 2019
+ *
+ * Author - Chethan Jagannatha Kulkarni, CTO, Mazon Services Pvt. Ltd. 
+ * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
 
 const mongoose = require('mongoose');
@@ -9,10 +11,6 @@ const {
 } = require('../helpers/dbHelper')
 
 const BookingSchema = new mongoose.Schema({
-    id: {
-        type: String,
-        required: true
-    },
     rId: {
         type: String,
         required: true
@@ -40,6 +38,14 @@ const BookingSchema = new mongoose.Schema({
         type: Number,
         required: true,
         default: 0
+    },
+    date: {
+        type: String,
+        required: true
+    },
+    time: {
+        type: String,
+        required: true
     },
     date_time: {
         type: Date,

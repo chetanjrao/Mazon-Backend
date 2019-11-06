@@ -5,8 +5,6 @@
  * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
 
-
-const express = require('express')
 const Users = require('../modals/User')
 const bcrypt = require('bcrypt')
 const AccessToken = require('../modals/AccessToken')
@@ -27,7 +25,6 @@ const oauth_middleware = async (req, res, next) => {
                     const now = new Date()
                     const expiry = access_token_document["expiry"]
                     if(now < expiry){
-                        res.locals["user"] = access_token_document["username"]
                         if(access_token_document["scopes"].indexOf(scope) === -1){
                             res.status(403)
                             res.json({
@@ -35,6 +32,7 @@ const oauth_middleware = async (req, res, next) => {
                                 "status": 403
                             })
                         } else {
+                            res.locals["user"] = access_token_document["username"]
                             next()
                         }
                     } else {

@@ -5,19 +5,20 @@
  * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
 const {
-    resources
-} = require('../helpers/dbHelper')
-const {
     calculate_amount,
     place_inorder,
     finish_inorder,
-    edit_inorder,
     show_inorder,
-    update_inorder
+    update_inorder,
+    create_inorder_token,
+    validate_inorder_token
 } = require('../services/inorder.service')
 const {
-
+    
 } = require("../services/utils.service")
+const {
+    get_user_details
+} = require("../services/user.service")
 
 const calculate_menu_amount = async (req, res, next) => {
     const restaurant_id = req.params["restaurant_id"]
@@ -30,7 +31,7 @@ const place_inorder_controller = async (req, res, next) => {
     const restaurant_id = req.body["restaurant_id"]
     const table_no = req.body["table_no"]
     const menu = req.body["menu"]
-    const order_token = req.body["order_token"]
+    const order_token = res.locals["inorder-token"]
     const offer_applied = req.body["offer_applied"]
     const name = req.body["name"]
     const phone = req.body["phone"]
@@ -77,7 +78,7 @@ const finish_inorder_controller = async (req, res, next) => {
     if(inorder != {} && inorder != undefined){
         if(inorder["is_paid"] == true){
             const finished_inorder = await finish_inorder(order_id)
-            if(finish_inorder != undefined){
+            if(finished_inorder["ok"]){
                 res.json({
                     "message": "Order completed successfully",
                     "status": 200
@@ -105,9 +106,74 @@ const finish_inorder_controller = async (req, res, next) => {
     }
 }
 
+const generate_inorder_token = async (req, res, next) => {
+    const restaurant_id = req.body["restaurant_id"]
+    const user = res.locals.user
+    const table_no = req.body["table_no"]
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const user_document = await get_user_details(user)
+    if(user_document["email"] != undefined){
+        const new_token = await create_inorder_token(restaurant_id, table_no, user, ip)
+        if(new_token["_id"] != undefined){
+            res.json({
+                "token": new_token["token"],
+                "expiry": new_token["expiry"],
+                "status": 200
+            })
+        } else {
+            res.status(500)
+            res.json({
+                "message": "Unable to create credentials",
+                "status": 500
+            })
+        }
+    } else {
+        res.status(403)
+        res.json({
+            "message": "Forbidden",
+            "status": 403
+        })
+    }
+}
+
+const validate_inorder_token_controller = async (req, res, next) => {
+    try {
+        const token = req.headers["x-mazon-token"]
+        const user = req.body["user"]
+        const restaurant_id = req.body["restaurant_id"]
+        const user_document = await get_user_details(user)
+        if(user_document["email"] != undefined){
+            const token_document = await validate_inorder_token(token, user, restaurant_id)
+            if(token_document){
+                res.locals["inorder-token"] = token
+                next()
+            } else {
+                res.json({
+                    "message": "Invalid credentials",
+                    "status": 401
+                })
+            }
+        } else {
+            res.status(403)
+            res.json({
+                "message": "Forbidden",
+                "status": 403
+            })
+        }
+    } catch (error) {
+        res.json({
+            "message": "Invalid credentials",
+            "status": 401
+        })
+    }
+    
+}
+
 module.exports = {
     "calculate_amount": calculate_menu_amount,
     "update_order": update_order_controller,
     "finish_order": finish_inorder_controller,
-    "place_inorder": place_inorder_controller
+    "place_inorder": place_inorder_controller,
+    "generate_token": generate_inorder_token,
+    "validate_token": validate_inorder_token_controller
 }

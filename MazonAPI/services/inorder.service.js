@@ -7,10 +7,47 @@ const {
 const {
     get_restaurant_owner_details
 } = require('./restaurant.service')
+const InorderToken = require("../modals/InorderToken")
 const {
-    io
-} = require('../helpers/root.helper')
-var sockets = require('../helpers/sockets.store')
+    generate_unique_identifier
+} = require("./utils.service")
+
+const create_inorder_token = async (restaurant_id, table_no, user, ip) => {
+    const token = generate_unique_identifier(10)
+    const now = new Date()
+    now.setHours(now.getHours() + 8)
+    const expiry = new Date(now)
+    const new_token_document = new InorderToken({
+        user: user,
+        token: token,
+        expiry: expiry,
+        restaurant_id: restaurant_id,
+        table_no: table_no,
+        ip: ip
+    })
+    const new_token = await new_token_document.save()
+    return new_token
+}
+
+const get_inorder_token = async (token, user, restuarant_id) => {
+    return await InorderToken.findOne({
+        "token": token,
+        "user": user,
+        "restaurant_id": restuarant_id
+    })
+}
+
+const validate_inorder_token = async (token, user, restuarant_id) => {
+    const user_token = await get_inorder_token(token, user, restuarant_id)
+    if(user_token["_id"] != undefined){
+        const now = new Date()
+        const expiry = user_token["expiry"]
+        if(now < expiry){
+            return true
+        }
+    }
+    return false
+}
 
 const place_inorder = async (restaurant_id, table_no, menu, order_token, offer_applied, name, phone, email) => {
     const inorder_query = new Inorder({
@@ -84,5 +121,7 @@ module.exports = {
     show_inorder,
     finish_inorder,
     update_inorder,
-    get_final_price
+    get_final_price,
+    create_inorder_token,
+    validate_inorder_token
 }
