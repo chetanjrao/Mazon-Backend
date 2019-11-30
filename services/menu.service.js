@@ -4,7 +4,7 @@
  * Author - Chethan Jagannatha Kulkarni, CTO, Mazon Services Pvt. Ltd. 
  * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
-const Menu = require('../modals/Menu')
+const Menu = require('../models/Menu')
 const {
     get_restaurant_owner_details
 } = require('./restaurant.service')
@@ -17,7 +17,7 @@ const getFoodDetails = async (food_id, restaurant_id) => {
     }, EXCLUDED_PROJECTIONS)
     return food
 }
-const Restaurants = require("../modals/Restaurant")
+const Restaurants = require("../models/Restaurant")
 
 const getRestaurantMenu = async (restaurant_ID) => {
     const restaurant_menu = await Menu.findOne({
@@ -94,7 +94,7 @@ const get_popular_food = async () => {
                 "inorders": -1
             }
         }
-    ]).limit(20)
+    ]).limit(15)
     return await Restaurants.populate(foods, {
         "path": "restaurant",
         "select": "name"

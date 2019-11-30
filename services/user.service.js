@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const Users = require('../modals/User')
+const Users = require('../models/User')
 
 const get_user_details = async (userID) => {
     const user = await Users.findOne({

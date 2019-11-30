@@ -1,4 +1,4 @@
-const Wallets = require("../modals/Wallet.js")
+const Wallets = require("../models/Wallet.js")
 
 const get_wallet_details = async (reference) => {
     const wallet = await Wallets.findOne({

@@ -1,8 +1,8 @@
-const Bookings = require("../modals/Booking")
+const Bookings = require("../models/Booking")
 const {
     generate_unique_identifier
 } = require("./utils.service")
-const BookingToken = require("../modals/BookingToken")
+const BookingToken = require("../models/BookingToken")
 
 const place_booking = async (rId, email, phone, token, male, female, name, coupon, date, time) => {
     const new_booking_document = new Bookings({

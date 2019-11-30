@@ -1,4 +1,4 @@
-const Transactions = require('../modals/Transaction.js')
+const Transactions = require('../models/Transaction.js')
 const { generate_unique_identifier } = require('./utils.service')
 
 const create_transaction = async(purpose, amount, type, ip, action_by, latitude, longitude, user_agent) => {

@@ -5,14 +5,14 @@
  * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
 
-const OauthClient = require('../modals/OauthClient')
-const OauthAuthorization = require('../modals/OauthAuthorization')
-const Users = require('../modals/User')
+const OauthClient = require('../models/OauthClient')
+const OauthAuthorization = require('../models/OauthAuthorization')
+const Users = require('../models/User')
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
 const uuid = require('uuid/v4')
-const AccessToken = require('../modals/AccessToken')
-const RefreshToken = require('../modals/RefreshToken')
+const AccessToken = require('../models/AccessToken')
+const RefreshToken = require('../models/RefreshToken')
 
 module.exports = {
     register: async (req, res, next) => {
@@ -22,8 +22,7 @@ module.exports = {
         var description = req.body.description;
         var project_name = req.body.project_name;
         var project_id = req.body.project_id;
-        var time_of_creation = new Date()
-        var scopes = req.body.scopes
+        var scopes = req.body.scopes;
         var home_page_url = req.body.home_page_url
         var authorization_header = req.headers.authorization
         var authorization_string = authorization_header.substring(5, authorization_header.length)

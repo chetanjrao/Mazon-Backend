@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
-const RatingReviews = require('../modals/RatingReview')
-const Restaurant = require('../modals/Restaurant')
+const RatingReviews = require('../models/RatingReview')
+const Restaurant = require('../models/Restaurant')
 const {
     check_restaurant
 } = require('../services/restaurant.service')

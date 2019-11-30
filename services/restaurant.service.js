@@ -6,7 +6,7 @@
  */
 
 const mongoose = require('mongoose')
-const Restaurants = require('../modals/Restaurant')
+const Restaurants = require('../models/Restaurant')
 
 const check_restaurant = async (restaurantID) => {
     const restaurant = await Restaurants.findOne({ "_id": restaurantID})

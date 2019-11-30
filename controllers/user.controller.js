@@ -5,10 +5,10 @@
  * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
 
-const Users = require('../modals/User')
+const Users = require('../models/User')
 const bcrypt = require('bcrypt')
-const AccessToken = require('../modals/AccessToken')
-const RefreshToken = require('../modals/RefreshToken')
+const AccessToken = require('../models/AccessToken')
+const RefreshToken = require('../models/RefreshToken')
 
 const oauth_middleware = async (req, res, next) => {
     try {

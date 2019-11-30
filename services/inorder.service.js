@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const Inorder = require('../modals/Inorder')
+const Inorder = require('../models/Inorder')
 const {
     getFoodDetails,
     get_particular_food_details,
@@ -8,7 +8,7 @@ const {
 const {
     get_restaurant_owner_details
 } = require('./restaurant.service')
-const InorderToken = require("../modals/InorderToken")
+const InorderToken = require("../models/InorderToken")
 const {
     generate_unique_identifier
 } = require("./utils.service")

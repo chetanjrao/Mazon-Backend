@@ -6,7 +6,7 @@
  */
 //const mongoose = require('mongoose')
 const database = require('../helpers/dbHelper')
-const Restaurants = require('../modals/Restaurant')
+const Restaurants = require('../models/Restaurant')
 
 module.exports = {
     index: async (req, res, next) => {

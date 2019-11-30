@@ -1,4 +1,4 @@
-const Analytics = require("../modals/Analytics")
+const Analytics = require("../models/Analytics")
 
 const get_analytics = async (reference) => {
     const analytics = await Analytics.aggregate([
