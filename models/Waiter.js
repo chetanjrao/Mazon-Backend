@@ -20,25 +20,36 @@ const WaiterSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    mobile_no: {
+    mobile: {
         type: String,
-        required: true
-    },
-    waiter_no: {
-        type: Number,
         required: true
     },
     image: {
-        type: String,
-        required: true
+        type: String
     },
     is_confirmed: {
-        type: Boolean,
-        default: false
+        is_confirmed: {
+            type: Boolean,
+            default: false
+        },
+        confirmed_by: {
+            type: String
+        },
+        confirmed_at: {
+            type: Date
+        }
     },
     is_deactivated: {
-        type: Boolean,
-        default: false
+        is_deactivated: {
+            type: Boolean,
+            default: false
+        },
+        deactivated_by: {
+            type: String
+        },
+        deactivated_at: {
+            type: Date
+        }
     },
     gender: {
         type: Number,

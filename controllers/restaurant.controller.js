@@ -7,6 +7,12 @@
 //const mongoose = require('mongoose')
 const database = require('../helpers/dbHelper')
 const Restaurants = require('../models/Restaurant')
+const {
+    get_inorders_with_restaurant
+} = require('../services/inorder.service')
+const {
+    get_bookings_with_restaurant
+} = require('../services/booking.service')
 
 module.exports = {
     index: async (req, res, next) => {
@@ -61,5 +67,15 @@ module.exports = {
             })
         })
         res.json(restaurantData[0])
+    },
+    inorders: async (req, res, next) => {
+        const restaurant_id = req.params["restaurantID"]
+        const inorders = await get_inorders_with_restaurant(restaurant_id)
+        res.json(inorders)
+    },
+    bookings: async (req, res, next) => {
+        const restaurant_id = req.params["restaurantID"]
+        const bookings = await get_bookings_with_restaurant(restaurant_id)
+        res.json(bookings)
     }
 }

@@ -11,7 +11,8 @@ const {
     show_inorder,
     update_inorder,
     create_inorder_token,
-    validate_inorder_token
+    validate_inorder_toke,
+    get_inorders_with_restaurant
 } = require('../services/inorder.service')
 const {
     

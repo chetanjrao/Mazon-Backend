@@ -77,6 +77,20 @@ const edit_status = async (id, status, updated_by) => {
     return edited_document
 }
 
+const get_bookings_with_email = async (email) => {
+    const bookings = await Bookings.find({
+        "email": email
+    })
+    return bookings
+}
+
+const get_bookings_with_restaurant = async (restaurant) => {
+    const bookings = await Bookings.find({
+        "rId": restaurant
+    })
+    return bookings
+}
+
 const finish_booking = async (amount, payment_mode, finished_by) => {
     const finished_document = await Bookings.findOneAndUpdate({
         "_id": id
@@ -99,5 +113,7 @@ module.exports = {
     finish_booking,
     validate_booking_token,
     create_booking_token,
-    get_booking_on_reference
+    get_booking_on_reference,
+    get_bookings_with_email,
+    get_bookings_with_restaurant
 }

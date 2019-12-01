@@ -20,4 +20,8 @@ router.route('/:restaurantID/ratings').get(ratings_controller.restaurant_ratings
 
 router.route('/:restaurantID/menu').get(menu_controller.getRestaurantMenu)
 
+router.route('/:restaurantID/inorders').get(restaurantController.inorders)
+
+router.route('/:restaurantID/bookings').get(restaurantController.bookings)
+
 module.exports = router

@@ -77,6 +77,20 @@ const show_inorder = async (order_id) => {
     return inorder
 }
 
+const get_inorders_with_email = async (email) => {
+    const inorders = await Inorder.find({
+        "email": email
+    })
+    return inorders
+}
+
+const get_inorders_with_restaurant = async (restaurant) => {
+    const inorders = await Inorder.find({
+        "rId": restaurant
+    })
+    return inorders
+}
+
 const finish_inorder = async (order_id) => {
     const inorder = await show_inorder(order_id)
     const updated_inorder = await inorder.update({
@@ -127,5 +141,7 @@ module.exports = {
     update_inorder,
     get_final_price,
     create_inorder_token,
-    validate_inorder_token
+    validate_inorder_token,
+    get_inorders_with_email,
+    get_inorders_with_restaurant
 }
