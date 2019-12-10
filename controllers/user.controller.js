@@ -9,6 +9,16 @@ const Users = require('../models/User')
 const bcrypt = require('bcrypt')
 const AccessToken = require('../models/AccessToken')
 const RefreshToken = require('../models/RefreshToken')
+const {
+    create_email_verification,
+    get_user_details_by_email_or_mobile,
+    get_user_details_by_email,
+    create_mobile_otp
+} = require('../services/user.service')
+const {
+    create_wallet,
+    create_wallet_access_token,
+} = require('../services/wallet.service')
 
 const oauth_middleware = async (req, res, next) => {
     try {
@@ -33,6 +43,8 @@ const oauth_middleware = async (req, res, next) => {
                             })
                         } else {
                             res.locals["user"] = access_token_document["username"]
+                            const current_user = await get_user_details_by_email(access_token_document["username"])
+                            res.locals["user_id"] = current_user["_id"]
                             next()
                         }
                     } else {
@@ -43,6 +55,7 @@ const oauth_middleware = async (req, res, next) => {
                         })
                     }
                 } else {
+                    console.log("ACCESS_TOKEN_MISSING")
                     res.status(403)
                     res.json({
                         "message": "Forbidden",
@@ -122,6 +135,56 @@ module.exports = {
                         "message": "Invalid Username or Password"
                     })
             }
+    },
+    signup: async (req, res, next)=>{
+        const name = req.body["name"]
+        const email = req.body["email"]
+        const password = req.body["password"]
+        const mobile = req.body["mobile"]
+        const device_id = req.body["device_id"]
+        const latitude = req.body["latitude"]
+        const longitude = req.body["longitude"]
+        const requesting_client = req.headers["user-agent"]
+        const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        const encrypted_password = bcrypt.hashSync(password, 10) 
+        const current_user_check = await get_user_details_by_email_or_mobile(email, mobile)
+        if(current_user_check == null){
+            const new_user_document = new Users({
+                first_name: name,
+                email: email,
+                password: encrypted_password,
+                mobile: mobile,
+                device_id: device_id
+            })
+            const new_user = await new_user_document.save()
+            if(new_user != null){
+                const mobile_otp = create_mobile_otp(new_user["_id"], mobile, "verification")
+                // TODO: Send otp here
+                const email_verification = await create_email_verification(email, new_user["_id"])
+                // TODO: Send Email about verification Token
+                // const new_wallet = await create_wallet(new_user["_id"], ip, latitude, longitude, requesting_client)
+                // const wallet_access_token_creation = create_wallet_access_token(new_user["_id"], new_wallet["_id"])
+                if(email_verification != null){
+                    res.json({
+                        "message": "User registered successfully. Verification link sent to email",
+                        "status": 200
+                    })
+                } else {
+                    res.json({
+                        "message": "User registered successfully. Couldn't send verification link",
+                        "status": 200
+                    })
+                }
+                //TODO: perform series of oauth 2.0 and wallet generation methods
+            }
+        } else {
+            res.status(403)
+            res.json({
+                "message": "Mobile or Email Address already exists",
+                "status": 403
+            })
+        }
+        
     },
     "token_middleware": oauth_middleware
 }

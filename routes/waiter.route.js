@@ -1,0 +1,11 @@
+const express = require('express')
+const router = express.Router()
+
+router.use().route('/inorder')
+router.route('/signin')
+router.route('/signup')
+router.use().route('/finish')
+router.use().route('/token')
+router.use().route('/refresh')
+router.use().route('/profile')
+router.use().route('/notifications')

@@ -5,12 +5,20 @@ const {
 var Schema = mongoose.Schema
 
 var inOrderSchema = new Schema({
+    user: {
+        type: String,
+        required: true
+    },
     rId: {
         type: String,
         required: true
     },
     rTable: {
         type: Number,
+        required: true
+    },
+    device_id: {
+        type: String,
         required: true
     },
     menu: [
@@ -62,6 +70,9 @@ var inOrderSchema = new Schema({
     is_paid: {
         type: Boolean,
         default: false
+    },
+    amount: {
+        type: Number
     },
     name: {
         type: String,

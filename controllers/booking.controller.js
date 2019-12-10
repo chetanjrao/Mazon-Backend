@@ -29,7 +29,9 @@ const create_booking_controller = async (req, res, next) => {
     const coupon = req.body["coupon"]
     const date = req.body["date"]
     const time = req.body["time"]
+    const user_id = res.locals["user_id"]
     const booking = await place_booking(rId, email, phone, token, male, female, name, coupon, date, time)
+    const analytics_document = add_analytics(rId, "bookings", user_id)
     if(booking["_id"] != undefined){
         res.json({
             "message": "Booking placed",
@@ -73,7 +75,27 @@ const generate_token_controller = async (req, res, next) => {
 }
 
 const update_booking_controller = async (req, res, next) => {
-    
+    const user = res.locals["user_id"]
+    const booking_status = req.body["booking_status"];
+    const booking_id = req.body["booking_id"]
+    const booking_details = await get_booking_on_reference(booking_id)
+    if(booking_details != null){
+        const updated_status_document = await edit_status(booking_id, booking_status, user)
+        if(updated_status_document != null){
+            res.send("ok")
+            res.status(500)
+            res.json({
+                "message": "Error updating booking",
+                "status": 500
+            })
+        }
+    } else {
+        res.status(404)
+        res.json({
+            "message": "Invalid booking requested",
+            "status": 404
+        })
+    }
 }
 
 const get_booking_controller = async (req, res, next) => {

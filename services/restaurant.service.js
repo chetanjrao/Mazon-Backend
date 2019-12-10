@@ -13,6 +13,11 @@ const check_restaurant = async (restaurantID) => {
     return restaurant != undefined && restaurant != {}
 }
 
+const get_restaurant = async (restaurantID) => {
+    const restaurant = await Restaurants.findOne({ "_id": restaurantID})
+    return restaurant
+}
+
 const get_restaurant_owner_details = async (restaurant_id) => {
     const restaurant = await Restaurants.findOne({ "_id": restaurant_id})
     return restaurant
@@ -20,5 +25,6 @@ const get_restaurant_owner_details = async (restaurant_id) => {
 
 module.exports = {
     check_restaurant,
-    get_restaurant_owner_details
+    get_restaurant_owner_details,
+    get_restaurant
 }

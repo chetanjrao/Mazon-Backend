@@ -11,7 +11,7 @@ const {
 } = require("../controllers/user.controller")
 
 router.use(token_middleware).route("/token").post(inorder.generate_token)
-router.use(token_middleware).use(inorder.validate_token).route("/place").post(inorder.place_inorder)
+router.use(token_middleware).use(inorder.validate_token).use(inorder.check_order).route("/place").post(inorder.place_inorder)
 router.use(token_middleware).use(inorder.validate_token).route("/update").patch(inorder.update_order)
 router.use(token_middleware).use(inorder.validate_token).route("/details").get()
 router.use(token_middleware).use(inorder.validate_token).route("/delete").delete()

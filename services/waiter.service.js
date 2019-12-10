@@ -1,4 +1,16 @@
 const Waiter = require('../models/Waiter')
+const WaiterVerificationToken = require('../models/WaiterVerificationToken')
+const {
+    mailer
+} = require('../helpers/utils.helper')
+const {
+    generate_unique_identifier
+} = require('./services/utils.service')
+const {
+    get_restaurant_owner_details
+} = require('./restaurant.service')
+const crypto = require('crypto')
+
 const RESTRICTED_PROJECTIONS = {
     "created_at": 0,
     "is_confirmed": 0,
@@ -14,7 +26,19 @@ const create_waiter = async (name, email, password, restaurant, mobile, gender) 
         mobile: mobile,
         gender: gender
     })
+    const current_restaurant = await get_restaurant_owner_details(restaurant)
     const new_waiter = await new_waiter_document.save()
+    const randomToken = crypto.randomBytes(24).toString("hex")
+    const waiter_verification_document = new WaiterVerificationToken({
+        waiter: new_waiter["_id"],
+        token: randomToken
+    })
+    const new_waiter_token_document = await waiter_verification_document.save()
+    const restaurant_email = current_restaurant["email"]
+    // mailer.sendMail({
+    //     to: restaurant_email
+    // })
+    // TODO: Send email
     return new_waiter
 }
 
