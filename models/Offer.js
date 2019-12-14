@@ -4,10 +4,6 @@ const {
 } = require('../helpers/dbHelper')
 
 const OfferSchema = new mongoose.Schema({
-    rId: {
-        type: String,
-        required: true
-    },
     code: {
         type: String,
         unique: true,
@@ -32,8 +28,28 @@ const OfferSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    availed_by: {
+        type: [String],
+        default: []
+    },
+    is_approved: {
+        is_approved: {
+            type: Boolea,
+            default: false
+        },
+        approved_by: {
+            type: String,
+        },
+        approved_at: {
+            type: Date
+        }
+    },
     created_at: {
         type: Date,
         default: new Date()
     }
 })
+
+const Offer = resources.model('Offer', OfferSchema)
+
+module.exports = Offer

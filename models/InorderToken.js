@@ -38,6 +38,10 @@ const InorderTokenSchema = new mongoose.Schema({
     created_at: {
         type: Date,
         default: new Date()
+    },
+    created_by: {
+        type: String,
+        required: true
     }
 })
 

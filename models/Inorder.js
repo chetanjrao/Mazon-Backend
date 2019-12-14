@@ -86,6 +86,10 @@ var inOrderSchema = new Schema({
         type: String,
         required: true
     },
+    created_by: {
+        type: String,
+        required: true
+    },
     last_updated_by: {
         type: String
     }

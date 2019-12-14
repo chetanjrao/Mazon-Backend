@@ -1,13 +1,10 @@
 const {
-    get_waiter_by_id,
-    get_waiters_by_restaurant,
-    create_waiter,
-    disable_waiter,
-    get_inorders,
-    update_waiter,
-    get_waiter_by_user_id,
-    get_waiter_with_strict_rules
-} = require('../services/waiter.service')
+    create_partner,
+    confim_partner,
+    disable_partner,
+    partner_details,
+    get_partners
+} = require('../services/partner.service')
 const {
     check_restaurant
 } = require('../services/restaurant.service')
@@ -21,7 +18,7 @@ const {
     create_email_verification
 } = require('../services/user.service')
 
-const login_waiter = async (req, res, next) => {
+const login_partner = async (req, res, next) => {
     var authroizationHeader = req.headers["authorization"];
     var base64AuthData = authroizationHeader.substring(6)
     var authorizationArray = decodeBase64toString(base64AuthData)
@@ -49,8 +46,8 @@ const login_waiter = async (req, res, next) => {
                     const current_access_token = access_tokens[0]["access_token"]
                     const current_refresh_token = refresh_tokens[0]["refresh_token"]
                     const restaurant = req.body["restaurant"]
-                    const WaiterCheck = await get_waiter_with_strict_rules(user["_id"], restaurant)
-                    if(WaiterCheck != null){
+                    const PartnerCheck = await partner_details(user["_id"])
+                    if(PartnerCheck != null){
                         res.json({
                             "message": "Logged in successfully as " + user["first_name"],
                             "status": 200,
@@ -80,6 +77,27 @@ const login_waiter = async (req, res, next) => {
         }
 }
 
+const confirm_partner_controller = async (req, res, next) => {
+    const user_id = res.locals["user_id"]
+    const partner_id = req.body["partner_id"]
+    const is_admin = res.locals["is_admin"]
+    if(is_admin != null && is_admin == true){
+        const update_partner = await confim_partner(partner_id, user_id)
+        if(update_partner != null){
+            res.json({
+                "message": "Partner confirmed successfully",
+                "status": 200
+            })
+        } else {
+            res.status(500)
+            res.json({
+                "message": "Failed to confirm partner",
+                "status": 500
+            })
+        }
+    }
+}
+
 const signup = async (req, res, next) => { 
         const name = req.body["name"]
         const email = req.body["email"]
@@ -106,13 +124,13 @@ const signup = async (req, res, next) => {
                 const mobile_otp = create_mobile_otp(new_user["_id"], mobile, "verification")
                 // TODO: Send otp here
                 const email_verification = await create_email_verification(email, new_user["_id"])
-                const waiter_creation = await create_waiter(new_user["_id"], restaurant)
+                const partner_creation = await create_partner(new_user["_id"], restaurant)
                 // TODO: Send Email about verification Token
                 // const new_wallet = await create_wallet(new_user["_id"], ip, latitude, longitude, requesting_client)
                 // const wallet_access_token_creation = create_wallet_access_token(new_user["_id"], new_wallet["_id"])
-                if(email_verification != null && waiter_creation != null){
+                if(email_verification != null && partner_creation != null){
                     res.json({
-                        "message": "Waiter registered successfully. Verification link sent to email. Restaurant verification pending",
+                        "message": "Partner registered successfully. Verification link sent to email. Restaurant verification pending",
                         "status": 200
                     })
                 } else {
@@ -122,11 +140,6 @@ const signup = async (req, res, next) => {
                     })
                 }
                 //TODO: perform series of oauth 2.0 and wallet generation methods
-            } else {
-                res.json({
-                    "message": "Unable to create user",
-                    "status": 500
-                })
             }
         } else {
             res.status(403)
@@ -137,12 +150,12 @@ const signup = async (req, res, next) => {
         }
     }
 
-const check_waiter_middleware = async (req, res, next) => {
+const check_partner_middleware = async (req, res, next) => {
     const user = res.locals["user_id"]
     const restaurant = req.body["restaurant_id"]
-    const WaiterCheck = await get_waiter_with_strict_rules(user, restaurant)
-    if(WaiterCheck != null){
-        res.locals["is_waiter"] = true
+    const PartnerCheck = await partner_details(user)
+    if(PartnerCheck != null){
+        res.locals["is_partner"] = true
         next()
     } else {
         res.status(401)
@@ -153,12 +166,7 @@ const check_waiter_middleware = async (req, res, next) => {
     }
 }
 
-const waiter_inorders = async (req, res, next) => {
-    const user = res.locals["user_id"]
-    const restaurant_id = req.body["restaurant_id"]
-    const inorders = await get_inorders(restaurant_id, user)
-    res.json(inorders)
-}
+
 
 
 function decodeBase64toString(string){
@@ -167,8 +175,8 @@ function decodeBase64toString(string){
 
 
 module.exports = {
-    login_waiter,
+    login_partner,
     signup,
-    check_waiter_middleware,
-    waiter_inorders
+    confirm_partner_controller,
+    check_partner_middleware
 }

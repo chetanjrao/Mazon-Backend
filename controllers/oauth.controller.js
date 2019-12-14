@@ -255,7 +255,7 @@ module.exports = {
                     } else {
                         //TODO: Revoke client
                         res.json({
-                            "message": "Beta baap ko chutiya mat banao",
+                            "message": "Client Revoked. Please contact the administrator",
                             "status": 403
                         })
                     }

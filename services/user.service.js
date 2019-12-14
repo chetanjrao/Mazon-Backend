@@ -14,7 +14,7 @@ const get_user_details = async (userID) => {
                 "_id": userID
             },
             {
-                "hasbeenDeactivated": false
+                "is_deactivated.is_deactivated": false
             }
         ]
     })
@@ -39,7 +39,7 @@ const get_user_details_by_email = async (email) => {
                 "email": email
             },
             {
-                "hasbeenDeactivated": false
+                "is_deactivated.is_deactivated": false
             }
         ]
     })

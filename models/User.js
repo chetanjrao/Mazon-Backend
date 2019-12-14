@@ -62,6 +62,9 @@ const User = new mongoose.Schema({
         type: String,
         required: true
     },
+    gender: {
+        type: String,
+    },
     isMobileVerified: {
         type: Boolean,
         default: false
@@ -82,7 +85,7 @@ const User = new mongoose.Schema({
     },
     userType: {
         type: Number,
-        default: 1
+        default: 1 //1) User 2)Partner 3)Waiter
     },
     savedRestaurants: {
         type: [String],

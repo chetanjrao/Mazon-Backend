@@ -1,9 +1,9 @@
-const mongoose = require("mongoose")
+const mongoose = require('mongoose')
 const {
     resources
-} = require("../helpers/dbHelper")
+} = require('../helpers/dbHelper')
 
-const WaiterSchema = new mongoose.Schema({
+const PartnerSchema = new mongoose.Schema({
     user: {
         type: String,
         required: true
@@ -24,23 +24,24 @@ const WaiterSchema = new mongoose.Schema({
             type: Date
         }
     },
-    is_deactivated: {
-        is_deactivated: {
+    is_disabled: {
+        is_disabled: {
             type: Boolean,
             default: false
         },
-        deactivated_by: {
+        disabled_by: {
             type: String
         },
-        deactivated_at: {
+        disabled_at: {
             type: Date
         }
     },
     created_at: {
         type: Date,
-        default: new Date()
-    }
+        required: new Date()
+    },
 })
 
-const Waiter = resources.model("Waiter", WaiterSchema)
-module.exports = Waiter
+const Partner = resources.model('Partner', PartnerSchema)
+
+module.exports = Partner

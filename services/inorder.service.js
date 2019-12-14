@@ -13,7 +13,7 @@ const {
     generate_unique_identifier
 } = require("./utils.service")
 
-const create_inorder_token = async (restaurant_id, table_no, offer_code="", user, ip) => {
+const create_inorder_token = async (restaurant_id, table_no, offer_code="", user, ip, created_by) => {
     var token = generate_unique_identifier(24)
     var token_document  = await InorderToken.findOne({
         "token": token
@@ -34,7 +34,8 @@ const create_inorder_token = async (restaurant_id, table_no, offer_code="", user
         restaurant_id: restaurant_id,
         table_no: table_no,
         ip: ip,
-        offer_code: offer_code
+        offer_code: offer_code,
+        created_by: created_by
     })
     const new_token = await new_token_document.save()
     return new_token
@@ -51,7 +52,8 @@ const get_inorder_token = async (token, user, restuarant_id) => {
 const get_order_using_token = async (order_token) => {
     const inorder_document = await Inorder.find({
         "order_token": order_token,
-        "order_status": 2
+        "order_status": 2,
+        "is_paid": false
     })
     return inorder_document
 }
@@ -68,7 +70,11 @@ const validate_inorder_token = async (token, user, restuarant_id) => {
     return false
 }
 
-const place_inorder = async (user, device_id, restaurant_id, table_no, menu, order_token, offer_applied, name, phone, email) => {
+const place_inorder = async (user, device_id, restaurant_id, table_no, menu, order_token, offer_applied, name, phone, email, created_by, is_waiter_taken) => {
+    var order_status = 1;
+    if(is_waiter_taken == true){
+        order_status = 2
+    }
     const inorder_query = new Inorder({
         user: user,
         rId: restaurant_id,
@@ -76,12 +82,13 @@ const place_inorder = async (user, device_id, restaurant_id, table_no, menu, ord
         device_id: device_id,
         menu: menu,
         order_date_time: new Date(),
-        order_status: 1,
+        order_status: order_status,
         order_token: order_token,
         offer_applied: offer_applied,
         name: name,
         phone: phone,
-        email: email
+        email: email,
+        created_by: created_by
     })
     const new_inorder = await inorder_query.save()
     for(var i=0; i < menu.length; i++){
