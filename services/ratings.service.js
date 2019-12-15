@@ -44,29 +44,20 @@ const getRestaurantRatingReviews = async (restaurantID) => {
     }
 }
 
-const post_rating_review = async (destination, type, rating, review, user, apetite, satisfaction) => {
-    const now = new Date()
+const post_rating_review = async (destination, type, rating, reference, review, user, apetite, satisfaction, email) => {
     const new_rating = new RatingReviews({
-        "uID": user,
-        "reviewDest": destination,
-        "type": type,
-        "rating": rating,
-        "review": review,
-        "remarks": remarks,
-        "dateTime": now,
-        "isRemoved": false,
-        "isValid": true,
-        "satisfaction": satisfaction,
-        "apetite": apetite,
-        "updated_at": now,
-        "updated_by": user,
-        "remarks": ""
+        user: user,
+        reviewDest: destination,
+        type: type,
+        email: email,
+        reference: reference,
+        rating: rating,
+        review: review,
+        satisfaction: satisfaction,
+        apetite: apetite
     })
     const rating_document = await new_rating.save()
-    if(rating_document == undefined || rating_document == {}) {
-        return false
-    }
-    return true
+    return rating_document
 }
 
 const update_rating_review = async (review_id, rating, review, apetite, satisfaction) => {
@@ -78,8 +69,8 @@ const update_rating_review = async (review_id, rating, review, apetite, satisfac
         "review": review,
         "apetite": apetite,
         "satisfaction": satisfaction
-    }).exec()
-
+    })
+    return updated_rating
 }
 
 const get_particular_rating_review = async (rating_id) => {

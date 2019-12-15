@@ -20,9 +20,23 @@ const OfferSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
-    offer_type: {
+    is_universal: {
+        is_universal: {
+            type: Boolean,
+            default: true
+        },
+        applies_to: {
+            type: [String],
+            default: []
+        }
+    },
+    offer_type: { 
         type: Number,
         default: 1
+    },
+    on_weekdays: {
+        type: Boolean,
+        required: true
     },
     created_by: {
         type: String,
@@ -34,7 +48,7 @@ const OfferSchema = new mongoose.Schema({
     },
     is_approved: {
         is_approved: {
-            type: Boolea,
+            type: Boolean,
             default: false
         },
         approved_by: {

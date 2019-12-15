@@ -23,7 +23,7 @@ const get_restaurant_owner_details = async (restaurant_id) => {
     return restaurant
 }
 
-const add_restaurant = async (name, city, locality, state, pincode, address, isDeliveryAvailable, bookingAvailable, images, priceForTwo, latitude, longitude, primary_contact, alternate_contact='', foodType, restaurantEmail, open_time, close_time, offers, noOfTables, cuisines, description, facilities, created_by) => {
+const add_restaurant = async (name, city, locality, state, pincode, address, isDeliveryAvailable, bookingAvailable, images, priceForTwo, latitude, longitude, primary_contact, alternate_contact='', foodType, restaurantEmail, open_time, close_time, offers, noOfTables, cuisines, description, facilities, created_by, payment) => {
     const restaurant_document = new Restaurants({
         name: name,
         city: city,
@@ -52,7 +52,8 @@ const add_restaurant = async (name, city, locality, state, pincode, address, isD
             closeTime: close_time
         },
         offers: offers,
-        created_by: created_by
+        created_by: created_by,
+        payment: payment
     })
     const new_restaurant = await restaurant_document.save()
     return new_restaurant

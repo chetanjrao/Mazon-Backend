@@ -24,6 +24,8 @@ const oauth_middleware = async (req, res, next) => {
     try {
         const request_header = req.headers["authorization"]
         const scope = req.body["scope"]
+        console.log(request_header)
+        console.log(scope)
         const split_header = request_header.split(" ", 2)
         if(split_header[0] == "Bearer"){
             try{

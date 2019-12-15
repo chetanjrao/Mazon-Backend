@@ -100,6 +100,23 @@ var restaurantSchema = new Schema({
             required: true
         }
     },
+    payment: {
+        account_no: {
+            type: String
+        },
+        ph_no: {
+            type: String
+        },
+        ifsc_code: {
+            type: String
+        },
+        holder_name: {
+            type: String
+        },
+        upi_id: {
+            type: String
+        }
+    },
     offers: {
         type: [String],
         default: []

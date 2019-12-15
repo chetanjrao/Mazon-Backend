@@ -47,10 +47,9 @@ const get_inorders = async (restaurant_id, waiter_id) => {
     }, {
         "device_id": 0,
         "menu": 0
-    })
+    }).sort({"order_date_time": -1})
     return inorders
 }
-
 
 const disable_waiter = async (waiter_id, disabled_by)=>{
     const updated_waiter = await Waiter.findOneAndUpdate({

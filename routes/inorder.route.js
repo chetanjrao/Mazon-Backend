@@ -10,7 +10,7 @@ const {
     token_middleware
 } = require("../controllers/user.controller")
 
-router.use(token_middleware).route("/summary").get(inorder.get_order_summary)
+router.use(token_middleware).route("/summary").post(inorder.get_order_summary)
 router.use(inorder.validate_token).route("/place").post(inorder.place_inorder)
 router.route("/update").patch(inorder.update_order)
 router.route("/details").get()

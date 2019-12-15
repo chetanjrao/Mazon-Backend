@@ -79,8 +79,10 @@ const place_inorder_controller = async (req, res, next) => {
 const get_order_summary = async (req, res, next) => {
     const inorder_token = req.headers["x-mazon-token"]
     const user = req.body["email"]
+    const strict = req.body["strict"]
+    console.log(strict)
     const token_document = await get_token_details(inorder_token, user)
-    const inorder_check = await get_order_using_token(inorder_token)
+    const inorder_check = await get_order_using_token(inorder_token, strict)
     const response = []
     var total_amount = 0;
     if(inorder_check.length > 0){
@@ -108,7 +110,6 @@ const get_order_summary = async (req, res, next) => {
     }
     res.json({
         "total": total_amount,
-        "offer_applied": token_document["offer_code"],
         "orders": response
     })
 }
@@ -221,6 +222,9 @@ const validate_inorder_token_controller = async (req, res, next) => {
         const restaurant_id = req.body["restaurant_id"]
         const user_document = await get_user_details_by_email(user)
         if(user_document["email"] != undefined){
+            console.log(token)
+            console.log(user)
+            console.log(restaurant_id)
             const token_document = await validate_inorder_token(token, user, restaurant_id)
             if(token_document){
                 res.locals["inorder-token"] = token

@@ -44,7 +44,8 @@ const add_restaurant_controller = async (req, res, next) => {
     const close_time = req.body["close_time"]
     const offers = req.body["offers"]
     const user_id = res.locals["user_id"]
-    const new_restaurant = await add_restaurant(name, city, locality, state, pincode, address, isDeliveryAvailable, bookingAvailable, images, priceForTwo, latitude, longitude, primary_contact, alternate_contact, foodType, restaurantEmail, open_time, close_time, offers, noOfTables, cuisines, description, facilities, user_id)
+    const payment = req.body["payment"]
+    const new_restaurant = await add_restaurant(name, city, locality, state, pincode, address, isDeliveryAvailable, bookingAvailable, images, priceForTwo, latitude, longitude, primary_contact, alternate_contact, foodType, restaurantEmail, open_time, close_time, offers, noOfTables, cuisines, description, facilities, user_id, payment)
     if(new_restaurant != null){
         res.status({
             "message": "Restaurant created successfully",

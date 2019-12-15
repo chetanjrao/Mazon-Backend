@@ -49,13 +49,31 @@ const get_inorder_token = async (token, user, restuarant_id) => {
     })
 }
 
-const get_order_using_token = async (order_token) => {
-    const inorder_document = await Inorder.find({
-        "order_token": order_token,
-        "order_status": 2,
-        "is_paid": false
-    })
-    return inorder_document
+const get_order_using_token = async (order_token, strict) => {
+    if(strict){
+        const inorder_document = await Inorder.find({
+            "order_token": order_token,
+            "order_status": 3,
+            "is_paid": false
+        })
+        return inorder_document
+    } else {
+        const inorder_document = await Inorder.find({
+            $or: [
+                {
+                    "order_token": order_token,
+                    "order_status": 2,
+                    "is_paid": false
+                },
+                {
+                    "order_token": order_token,
+                    "order_status": 3,
+                    "is_paid": false
+                },
+            ]
+        })
+        return inorder_document
+    }
 }
 
 const validate_inorder_token = async (token, user, restuarant_id) => {
@@ -134,11 +152,13 @@ const get_token_details = async (token, user) => {
     return token_document
 }
 
-const finish_inorder = async (order_id) => {
+const finish_inorder = async (order_id, amount) => {
     const inorder = await show_inorder(order_id)
     const updated_inorder = await inorder.update({
         $set: {
-            "order_status": 5
+            "order_status": 4,
+            "is_paid": true,
+            "amount": amount
         }
     })
     return updated_inorder
@@ -182,10 +202,12 @@ const get_overall_details = async (restaurant_id, items) => {
         var details = {
             "name": "",
             "price": "",
-            "quantity": ""
+            "quantity": "",
+            "food_id": ""
         }
         var food = await get_particular_food_details(restaurant_id, items[i]["cId"], items[i]["fId"])
         details["name"] = food["fName"]
+        details["food_id"] = food["_id"]
         var price = items[i]["isHalf"] && food["halfPrice"] != undefined ? food["halfPrice"] : food["price"]
         details["price"] = price
         var food_amount = Number.parseFloat(price) * Number.parseFloat(items[i]['quantity'])
