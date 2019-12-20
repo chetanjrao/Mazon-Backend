@@ -47,7 +47,7 @@ const BookingSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    created_at: {
+    date_time: {
         type: Date,
         default: new Date()
     },

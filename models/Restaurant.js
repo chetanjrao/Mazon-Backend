@@ -12,6 +12,11 @@ const {
 } = require('../helpers/dbHelper')
 
 var restaurantSchema = new Schema({
+    rId: {
+        type: Number,
+        required: true,
+        unique: true
+    },
     name: {
         type: String,
         required: true,
@@ -23,14 +28,6 @@ var restaurantSchema = new Schema({
     },
     locality: {
         type: Number,
-        required: true
-    },
-    state: {
-        type: String,
-        required: true
-    },
-    pincode: {
-        type: String,
         required: true
     },
     address: {
@@ -66,22 +63,23 @@ var restaurantSchema = new Schema({
     },
     coordinates: {
         latitude: {
-            type: Number,
+            type: String,
             required: true
         },
         longitude: {
-            type: Number,
+            type: String,
             required: true
         }
     },
-    primary_contact: {
+    phNo: {
         type: String,
         required: true
     },
-    alternate_contact: {
-        type: String
-    },
     foodType: {
+        type: String,
+        required: true
+    },
+    telNo: {
         type: String,
         required: true
     },
@@ -100,26 +98,11 @@ var restaurantSchema = new Schema({
             required: true
         }
     },
-    payment: {
-        payment_mode: {
-            payment_id: {
-                type: String
-            },
-            mobile: {
-                type: String
-            },
-            ifsc_code: {
-                type: String
-            },
-            beneficiary_name: {
-                type: String
-            }
-        },
+    owner: {
+        type: Number,
+        required: true
     },
-    offers: {
-        type: [String],
-        default: []
-    },
+    offers: [String],
     description: {
         type: String,
         required: true
@@ -128,18 +111,8 @@ var restaurantSchema = new Schema({
         type: Number,
         required: true
     },
-    cuisines: {
-        type: [String],
-        default: []
-    },
-    facilities: {
-        type: [String],
-        default: []
-    },
-    created_by: {
-        type: String,
-        required: true
-    },
+    cuisines: [String],
+    facilities: [String],
     onBoardTime: {
         type: Date,
         default: new Date()

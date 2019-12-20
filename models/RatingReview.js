@@ -12,20 +12,12 @@ const {
 } = require('../helpers/dbHelper')
 
 const RatingReview = new mongoose.Schema({
-    user: { //User email to which the review is assigned
+    uID: { //User email to which the review is assigned
         type: String,
         required: true
     },
     type: { // Type of Review i) Food or ii) Restaurant
         type: Number,
-        required: true
-    },
-    reference: {
-        type: String,
-        required: true
-    },
-    email: {
-        type: String,
         required: true
     },
     reviewDest: { // Restaurant ID or Food ID to which the review / rating is assigned
@@ -38,7 +30,8 @@ const RatingReview = new mongoose.Schema({
     },
     review: {
         type: String,
-        trim: true
+        trim: true,
+        required: true
     },
     apetite: {
         type: Number,
@@ -49,8 +42,8 @@ const RatingReview = new mongoose.Schema({
         default: 2
     },
     dateTime: {
-        type: Date,
-        default: new Date()
+        type:String,
+        required: true
     },
     isValid: {
         type: Boolean,

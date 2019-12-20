@@ -186,8 +186,7 @@ module.exports = {
         if(oauth_client_check != null){
             const code_docs_check = await OauthAuthorization.findOne({
                 'authorization_code': code,
-                "client_id": client_id,
-                "identity": username
+                "client_id": client_id
             })
             if(code_docs_check != null){
                 if(code_docs_check["code_challenge_method"] == "plain"){
@@ -255,7 +254,7 @@ module.exports = {
                     } else {
                         //TODO: Revoke client
                         res.json({
-                            "message": "Client Revoked. Please contact the administrator",
+                            "message": "Beta baap ko chutiya mat banao",
                             "status": 403
                         })
                     }
@@ -331,12 +330,6 @@ module.exports = {
                         })
                     }
                 }
-            } else {
-                res.status(403)
-                res.json({
-                    "message": "Invalid attempt to get the token. Report sent to administrator",
-                    "status": 403
-                })
             }
         } else {
             const error = new Error("Invalid Client Credentials")

@@ -4,13 +4,28 @@ const {
 } = require("../helpers/dbHelper")
 
 const WaiterSchema = new mongoose.Schema({
-    user: {
+    name: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    password: {
         type: String,
         required: true
     },
     restaurant: {
         type: String,
         required: true
+    },
+    mobile: {
+        type: String,
+        required: true
+    },
+    image: {
+        type: String
     },
     is_confirmed: {
         is_confirmed: {
@@ -35,6 +50,13 @@ const WaiterSchema = new mongoose.Schema({
         deactivated_at: {
             type: Date
         }
+    },
+    gender: {
+        type: Number,
+        required: true
+    },
+    address: {
+        type: String,
     },
     created_at: {
         type: Date,

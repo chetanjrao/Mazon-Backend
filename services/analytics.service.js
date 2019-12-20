@@ -57,51 +57,6 @@ const add_analytics = async (reference, parameter, user) => {
     return updated_document
 }
 
-// const add_inorder_analytics = async (reference, user, order_id) => {
-//     const updated_document = await Analytics.findOneAndUpdate({
-//         "reference": reference
-//     }, {
-//         $push:{
-//             "inorders": {
-//                 user: `${user}`,
-//                 order_id: order_id,
-//                 time: new Date()
-//             }
-//         }
-//     })
-//     return updated_document
-// }
-
-// const add_booking_analytics = async (reference, user, order_id) => {
-//     const updated_document = await Analytics.findOneAndUpdate({
-//         "reference": reference
-//     }, {
-//         $push:{
-//             "bookings": {
-//                 user: `${user}`,
-//                 order_id: order_id,
-//                 time: new Date()
-//             }
-//         }
-//     })
-//     return updated_document
-// }
-
-// const add_scan_analytics = async (reference, user) => {
-//     const updated_document = await Analytics.findOneAndUpdate({
-//         "reference": reference
-//     }, {
-//         $push:{
-//             "scans": {
-//                 user: `${user}`,
-//                 time: new Date()
-//             }
-//         }
-//     })
-//     return updated_document
-// }
-
-
 const find_analytics = async (reference) => {
     const analytics_document = await Analytics.findOne({
         "reference": reference

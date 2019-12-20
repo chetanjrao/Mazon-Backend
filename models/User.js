@@ -4,12 +4,9 @@ const {
 } = require('../helpers/dbHelper')
 
 const User = new mongoose.Schema({
-    first_name: {
+    name: {
         type: String,
         required: true
-    },
-    last_name: {
-        type: String,
     },
     email: {
         type: String,
@@ -60,10 +57,6 @@ const User = new mongoose.Schema({
     },
     mobile: {
         type: String,
-        required: true
-    },
-    gender: {
-        type: String,
     },
     isMobileVerified: {
         type: Boolean,
@@ -73,11 +66,10 @@ const User = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    created_at: {
-        type: Date,
-        default: new Date()
+    registrationTime: {
+        type: String
     },
-    cover_image: {
+    lastLoginTime: {
         type: String
     },
     image: {
@@ -85,28 +77,46 @@ const User = new mongoose.Schema({
     },
     userType: {
         type: Number,
-        default: 1 //1) User 2)Partner 3)Waiter
+        required: true,
+        default: 1
     },
-    savedRestaurants: {
-        type: [String],
-        default: []
-    },
-    savedFood: {
-        type: [String],
-        default: []
-    },
-    device_id: {
-        type: [String],
-        default: []
-    },
-    is_deactivated: {
-        is_deactivated:  {
-            type: Boolean,
-            default: false
-        },
-        deativated_at: {
-            type: Date
+    bookings: [
+        {
+            type: String
         }
+    ],
+    inorders: [
+        {
+            type: String
+        }
+    ],
+    savedRestaurants: [
+        {
+            type: String
+        }
+    ],
+    savedFood: [
+        {
+            type: String
+        }
+    ],
+    hasbeenDeactivated: {
+        type: Boolean,
+        default: false
+    },
+    ratingsAndReviews: [
+        {
+            type: String
+        }
+    ],
+    emailVerificationToken: {
+        type: String
+    },
+    walletID: {
+        type: String,
+    },
+    walletToken: {
+        type: String
     },
     isPremium: {
         type: Boolean,

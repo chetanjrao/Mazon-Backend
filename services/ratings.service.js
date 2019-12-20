@@ -44,20 +44,29 @@ const getRestaurantRatingReviews = async (restaurantID) => {
     }
 }
 
-const post_rating_review = async (destination, type, rating, reference, review, user, apetite, satisfaction, email) => {
+const post_rating_review = async (destination, type, rating, review, user, apetite, satisfaction) => {
+    const now = new Date()
     const new_rating = new RatingReviews({
-        user: user,
-        reviewDest: destination,
-        type: type,
-        email: email,
-        reference: reference,
-        rating: rating,
-        review: review,
-        satisfaction: satisfaction,
-        apetite: apetite
+        "uID": user,
+        "reviewDest": destination,
+        "type": type,
+        "rating": rating,
+        "review": review,
+        "remarks": remarks,
+        "dateTime": now,
+        "isRemoved": false,
+        "isValid": true,
+        "satisfaction": satisfaction,
+        "apetite": apetite,
+        "updated_at": now,
+        "updated_by": user,
+        "remarks": ""
     })
     const rating_document = await new_rating.save()
-    return rating_document
+    if(rating_document == undefined || rating_document == {}) {
+        return false
+    }
+    return true
 }
 
 const update_rating_review = async (review_id, rating, review, apetite, satisfaction) => {
@@ -69,20 +78,13 @@ const update_rating_review = async (review_id, rating, review, apetite, satisfac
         "review": review,
         "apetite": apetite,
         "satisfaction": satisfaction
-    })
-    return updated_rating
+    }).exec()
+
 }
 
 const get_particular_rating_review = async (rating_id) => {
     const rating_review = await RatingReviews.findOne({
         "_id": rating_id
-    })
-    return rating_review
-}
-
-const get_destination_rating_review = async (destination_id) => {
-    const rating_review = await RatingReviews.find({
-        "reviewDest": destination_id
     })
     return rating_review
 }
@@ -116,6 +118,5 @@ module.exports = {
     post_rating_review,
     update_rating_review,
     disable_rating_review,
-    delete_rating_review,
-    get_destination_rating_review
+    delete_rating_review
 }

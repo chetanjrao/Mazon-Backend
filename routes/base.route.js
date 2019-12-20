@@ -7,7 +7,7 @@ const {
 } = require("../services/menu.service")
 
 router.route("/restaurants/filter").get(async (req, res, next)=>{
-    const top_food = await get_popular_food()
+    const top_food = await get_popualar_food()
     res.json(top_food)
 })
 
