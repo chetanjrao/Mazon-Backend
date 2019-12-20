@@ -4,9 +4,12 @@ const {
 } = require('../helpers/dbHelper')
 
 const User = new mongoose.Schema({
-    name: {
+    first_name: {
         type: String,
         required: true
+    },
+    last_name: {
+        type: String,
     },
     email: {
         type: String,
@@ -57,6 +60,10 @@ const User = new mongoose.Schema({
     },
     mobile: {
         type: String,
+        required: true
+    },
+    gender: {
+        type: String,
     },
     isMobileVerified: {
         type: Boolean,
@@ -66,10 +73,11 @@ const User = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    registrationTime: {
-        type: String
+    created_at: {
+        type: Date,
+        default: new Date()
     },
-    lastLoginTime: {
+    cover_image: {
         type: String
     },
     image: {
@@ -77,46 +85,28 @@ const User = new mongoose.Schema({
     },
     userType: {
         type: Number,
-        required: true,
-        default: 1
+        default: 1 //1) User 2)Partner 3)Waiter
     },
-    bookings: [
-        {
-            type: String
-        }
-    ],
-    inorders: [
-        {
-            type: String
-        }
-    ],
-    savedRestaurants: [
-        {
-            type: String
-        }
-    ],
-    savedFood: [
-        {
-            type: String
-        }
-    ],
-    hasbeenDeactivated: {
-        type: Boolean,
-        default: false
+    savedRestaurants: {
+        type: [String],
+        default: []
     },
-    ratingsAndReviews: [
-        {
-            type: String
+    savedFood: {
+        type: [String],
+        default: []
+    },
+    device_id: {
+        type: [String],
+        default: []
+    },
+    is_deactivated: {
+        is_deactivated:  {
+            type: Boolean,
+            default: false
+        },
+        deativated_at: {
+            type: Date
         }
-    ],
-    emailVerificationToken: {
-        type: String
-    },
-    walletID: {
-        type: String,
-    },
-    walletToken: {
-        type: String
     },
     isPremium: {
         type: Boolean,

@@ -8,16 +8,19 @@ const WalletSchema = new Schema({
         type: String,
         required: true
     },
-    w_id: {
-        type: String,
-        required: true
-    },
     wallet_points: {
         type: Number,
         required: true
     },
-    history: [String],
+    history: {
+        type: [String],
+        default: []
+    },
     last_transaction_time: {
+        type: Date,
+        default: new Date()
+    },
+    created_at: {
         type: Date,
         default: new Date()
     }

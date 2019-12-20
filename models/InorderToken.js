@@ -28,9 +28,20 @@ const InorderTokenSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    is_disabled: {
+        type: Boolean,
+        default: false
+    },
+    offer_code: {
+        type: String
+    },
     created_at: {
         type: Date,
         default: new Date()
+    },
+    created_by: {
+        type: String,
+        required: true
     }
 })
 

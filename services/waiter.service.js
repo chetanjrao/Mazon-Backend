@@ -1,21 +1,54 @@
 const Waiter = require('../models/Waiter')
+const WaiterVerificationToken = require('../models/WaiterVerificationToken')
+const {
+    mailer
+} = require('../helpers/utils.helper')
+const {
+    generate_unique_identifier
+} = require('./utils.service')
+const {
+    get_restaurant_owner_details
+} = require('./restaurant.service')
+const Inorders = require('../models/Inorder')
+const crypto = require('crypto')
+
 const RESTRICTED_PROJECTIONS = {
     "created_at": 0,
     "is_confirmed": 0,
     "is_deactivated": 0
 }
 
-const create_waiter = async (name, email, password, restaurant, mobile, gender) => {
+const create_waiter = async (user_id, restaurant) => {
     const new_waiter_document = new Waiter({
-        name: name,
-        email: email,
-        password: password,
-        restaurant: restaurant,
-        mobile: mobile,
-        gender: gender
+        user: user_id,
+        restaurant: restaurant
     })
+    const current_restaurant = await get_restaurant_owner_details(restaurant)
     const new_waiter = await new_waiter_document.save()
+    const randomToken = crypto.randomBytes(24).toString("hex")
+    const waiter_verification_document = new WaiterVerificationToken({
+        waiter: new_waiter["_id"],
+        token: randomToken
+    })
+    const new_waiter_token_document = await waiter_verification_document.save()
+    const restaurant_email = current_restaurant["email"]
+    // mailer.sendMail({
+    //     to: restaurant_email
+    // })
+    // TODO: Send email
     return new_waiter
+}
+
+const get_inorders = async (restaurant_id, waiter_id) => {
+    const inorders = await Inorders.find({
+        "created_by": waiter_id,
+        "rId": restaurant_id,
+        "is_paid": false
+    }, {
+        "device_id": 0,
+        "menu": 0
+    }).sort({"order_date_time": -1})
+    return inorders
 }
 
 const disable_waiter = async (waiter_id, disabled_by)=>{
@@ -52,21 +85,25 @@ const update_waiter = async (waiter_id, name , gender, address) => {
 
 const get_waiter_by_id = async (waiter_id) => {
     const waiter = await Waiter.findOne({
-        "_id": waiter_id
+        "_id": waiter_id,
+        "is_confirmed.is_confirmed": true
     }, RESTRICTED_PROJECTIONS)
     return waiter
 }
-
-const get_waiter_by_email = async (email) => {
+const get_waiter_by_user_id = async (user_id) => {
     const waiter = await Waiter.findOne({
-        "email": email
+        "user": user_id,
+        "is_confirmed.is_confirmed": true
     })
+    return waiter
 }
 
-const get_waiter_by_mobile = async (mobile) => {
+const get_waiter_with_strict_rules = async (user_id, restaurant) => {
     const waiter = await Waiter.findOne({
-        "mobile": mobile
-    }, RESTRICTED_PROJECTIONS)
+        "user": user_id,
+        "restaurant": restaurant,
+        "is_deactivated.is_deactivated": false
+    })
     return waiter
 }
 
@@ -83,6 +120,7 @@ module.exports = {
     update_waiter,
     get_waiter_by_id,
     get_waiters_by_restaurant,
-    get_waiter_by_email,
-    get_waiter_by_mobile
+    get_inorders,
+    get_waiter_by_user_id,
+    get_waiter_with_strict_rules
 }

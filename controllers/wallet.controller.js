@@ -16,6 +16,7 @@ const get_wallet_details_controller = async (req, res, next) =>{
     }
 }
 
+
 module.exports = {
     "get_wallet_details": get_wallet_details_controller,
 }

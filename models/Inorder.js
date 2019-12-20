@@ -5,12 +5,20 @@ const {
 var Schema = mongoose.Schema
 
 var inOrderSchema = new Schema({
+    user: {
+        type: String,
+        required: true
+    },
     rId: {
         type: String,
         required: true
     },
     rTable: {
         type: Number,
+        required: true
+    },
+    device_id: {
+        type: String,
         required: true
     },
     menu: [
@@ -63,6 +71,9 @@ var inOrderSchema = new Schema({
         type: Boolean,
         default: false
     },
+    amount: {
+        type: Number
+    },
     name: {
         type: String,
         required: true
@@ -75,8 +86,15 @@ var inOrderSchema = new Schema({
         type: String,
         required: true
     },
+    created_by: {
+        type: String,
+        required: true
+    },
     last_updated_by: {
         type: String
+    },
+    last_updated_at: {
+        type: Date
     }
 })
 

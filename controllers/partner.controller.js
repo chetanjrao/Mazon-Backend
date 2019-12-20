@@ -1,27 +1,42 @@
 const {
-    get_waiter_by_id,
-    get_waiters_by_restaurant,
-    create_waiter,
-    disable_waiter,
-    get_inorders,
-    update_waiter,
-    get_waiter_by_user_id,
-    get_waiter_with_strict_rules
-} = require('../services/waiter.service')
+    create_partner,
+    confim_partner,
+    disable_partner,
+    partner_details,
+    get_partners,
+    partner_details_specs,
+    get_inorders
+} = require('../services/partner.service');
 const {
-    check_restaurant
-} = require('../services/restaurant.service')
-const AccessToken = require('../models/AccessToken')
-const RefreshToken = require('../models/RefreshToken')
-const bcrypt = require('bcrypt')
-const Users = require('../models/User')
+    check_restaurant,
+    get_restaurant
+} = require('../services/restaurant.service');
+const {
+    calculate_amount,
+    place_inorder,
+    finish_inorder,
+    show_inorder,
+    update_inorder,
+    create_inorder_token,
+    validate_inorder_token,
+    get_active_inorder_with_email,
+    get_inorders_with_restaurant,
+    get_order_using_token_partner,
+    get_overall_details,
+    get_token_details,
+    get_inorders_specific
+} = require('../services/inorder.service')
+const AccessToken = require('../models/AccessToken');
+const RefreshToken = require('../models/RefreshToken');
+const bcrypt = require('bcrypt');
+const Users = require('../models/User');
 const {
     get_user_details_by_email_or_mobile,
     create_mobile_otp,
     create_email_verification
 } = require('../services/user.service')
 
-const login_waiter = async (req, res, next) => {
+const login_partner = async (req, res, next) => {
     var authroizationHeader = req.headers["authorization"];
     var base64AuthData = authroizationHeader.substring(6)
     var authorizationArray = decodeBase64toString(base64AuthData)
@@ -48,14 +63,16 @@ const login_waiter = async (req, res, next) => {
                     })
                     const current_access_token = access_tokens[0]["access_token"]
                     const current_refresh_token = refresh_tokens[0]["refresh_token"]
-                    const restaurant = req.body["restaurant"]
-                    const WaiterCheck = await get_waiter_with_strict_rules(user["_id"], restaurant)
-                    if(WaiterCheck != null){
+                    const restaurant = req.body["restaurant_id"]
+                    const PartnerCheck = await partner_details_specs(user["_id"])
+                    if(PartnerCheck != null){
                         res.json({
                             "message": "Logged in successfully as " + user["first_name"],
                             "status": 200,
+                            "restaurant_id": PartnerCheck["restaurant"],
                             "access_token": current_access_token,
-                            "refresh_token": current_refresh_token
+                            "refresh_token": current_refresh_token,
+                            "_id": user["_id"]
                         })
                     } else {
                         res.status(401)
@@ -78,6 +95,66 @@ const login_waiter = async (req, res, next) => {
                     "message": "Invalid Username or Password"
                 })
         }
+}
+
+const get_order_summary = async (req, res, next) => {
+    const inorder_token = req.headers["x-mazon-token"]
+    const user = req.body["email"]
+    const reference = req.body["reference"]
+    const token_document = await get_token_details(inorder_token, user)
+    console.log(reference)
+    const inorder_check = await get_order_using_token_partner(inorder_token, reference)
+    const response = []
+    var total_amount = 0;
+    if(inorder_check.length > 0){
+        for(var i=0;i<inorder_check.length;i++){
+            const current_restaurant = inorder_check[i]["rId"]
+            const items = inorder_check[i]["menu"]
+            const current_inorder_details = await get_overall_details(current_restaurant, items)
+            const order_id = inorder_check[i]["_id"]
+            const placed_at = inorder_check[i]["order_date_time"]
+            const restaurant_name = await get_restaurant(inorder_check[i]["rId"])
+            const price = await calculate_amount(current_restaurant, items)
+            total_amount += price;
+            response.push({
+                "restaurant_name": restaurant_name["name"],
+                "items": current_inorder_details,
+                "order_id": order_id,
+                "name": inorder_check[i]["name"],
+                "email": inorder_check[i]["email"],
+                "phone": inorder_check[i]["phone"],
+                "placed_at": placed_at,
+                "table_no": inorder_check[i]["rTable"],
+                "price": price
+            })
+        }
+    }
+    res.json({
+        "total": total_amount,
+        "offer_code": token_document["offer_code"],
+        "orders": response
+    })
+}
+
+const confirm_partner_controller = async (req, res, next) => {
+    const user_id = res.locals["user_id"]
+    const partner_id = req.body["partner_id"]
+    const is_admin = res.locals["is_admin"]
+    if(is_admin != null && is_admin == true){
+        const update_partner = await confim_partner(partner_id, user_id)
+        if(update_partner != null){
+            res.json({
+                "message": "Partner confirmed successfully",
+                "status": 200
+            })
+        } else {
+            res.status(500)
+            res.json({
+                "message": "Failed to confirm partner",
+                "status": 500
+            })
+        }
+    }
 }
 
 const signup = async (req, res, next) => { 
@@ -106,13 +183,13 @@ const signup = async (req, res, next) => {
                 const mobile_otp = create_mobile_otp(new_user["_id"], mobile, "verification")
                 // TODO: Send otp here
                 const email_verification = await create_email_verification(email, new_user["_id"])
-                const waiter_creation = await create_waiter(new_user["_id"], restaurant)
+                const partner_creation = await create_partner(new_user["_id"], restaurant)
                 // TODO: Send Email about verification Token
                 // const new_wallet = await create_wallet(new_user["_id"], ip, latitude, longitude, requesting_client)
                 // const wallet_access_token_creation = create_wallet_access_token(new_user["_id"], new_wallet["_id"])
-                if(email_verification != null && waiter_creation != null){
+                if(email_verification != null && partner_creation != null){
                     res.json({
-                        "message": "Waiter registered successfully. Verification link sent to email. Restaurant verification pending",
+                        "message": "Partner registered successfully. Verification link sent to email. Restaurant verification pending",
                         "status": 200
                     })
                 } else {
@@ -122,11 +199,6 @@ const signup = async (req, res, next) => {
                     })
                 }
                 //TODO: perform series of oauth 2.0 and wallet generation methods
-            } else {
-                res.json({
-                    "message": "Unable to create user",
-                    "status": 500
-                })
             }
         } else {
             res.status(403)
@@ -137,12 +209,12 @@ const signup = async (req, res, next) => {
         }
     }
 
-const check_waiter_middleware = async (req, res, next) => {
+const check_partner_middleware = async (req, res, next) => {
     const user = res.locals["user_id"]
     const restaurant = req.body["restaurant_id"]
-    const WaiterCheck = await get_waiter_with_strict_rules(user, restaurant)
-    if(WaiterCheck != null){
-        res.locals["is_waiter"] = true
+    const PartnerCheck = await partner_details(user, restaurant)
+    if(PartnerCheck != null){
+        res.locals["is_partner"] = true
         next()
     } else {
         res.status(401)
@@ -153,12 +225,21 @@ const check_waiter_middleware = async (req, res, next) => {
     }
 }
 
-const waiter_inorders = async (req, res, next) => {
+const restaurant_inorders = async (req, res, next) => {
     const user = res.locals["user_id"]
-    const restaurant_id = req.body["restaurant_id"]
-    const inorders = await get_inorders(restaurant_id, user)
+    const restaurant_id = req.params["restaurantID"]
+    const inorders = await get_inorders(restaurant_id)
     res.json(inorders)
 }
+
+const restaurant_inorders_specific = async (req, res, next) => {
+    const user = res.locals["user_id"]
+    const restaurant_id = req.params["restaurantID"]
+    const status = req.body["order_status"]
+    const inorders = await get_inorders_specific(restaurant_id, status)
+    res.json(inorders)
+}
+
 
 
 function decodeBase64toString(string){
@@ -167,8 +248,11 @@ function decodeBase64toString(string){
 
 
 module.exports = {
-    login_waiter,
+    login_partner,
     signup,
-    check_waiter_middleware,
-    waiter_inorders
+    confirm_partner_controller,
+    check_partner_middleware,
+    restaurant_inorders,
+    get_order_summary,
+    restaurant_inorders_specific
 }
