@@ -21,8 +21,7 @@ const PaymentSchema = new mongoose.Schema({
         required: true
     },
     user_agent: {
-        type: String,
-        required: true
+        type: String
     },
     created_at: {
         type: Date,

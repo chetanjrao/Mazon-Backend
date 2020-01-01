@@ -7,6 +7,7 @@ const {
 const {
     get_user_details
 } = require('../services/user.service')
+const Users = require('../models/User')
 
 const getRestaurantRatingReviews = async (restaurantID) => {
     const check_restaurant_validity = await check_restaurant(restaurantID)
@@ -87,6 +88,104 @@ const get_destination_rating_review = async (destination_id) => {
     return rating_review
 }
 
+const get_aggregation_rating = async (destination_id) => {
+    const rating_review = await RatingReviews.aggregate([
+        {
+            $match: {
+                "reviewDest": destination_id,
+                "isValid": true,
+                "isRemoved": false
+            }
+        },
+        {
+            $group: {
+                "_id": "$user",
+                "rating": {
+                    $avg: "$rating"
+                },
+                "user": {
+                    $last: "$user"
+                },
+                "review": {
+                    $last: "$review"
+                },
+                "date_time": {
+                    $last: "$dateTime"
+                },
+                "satisfaction": {
+                    $last: "$satisfaction"
+                },
+                "apetite": {
+                    $last: "$apetite"
+                }
+            }
+        },
+        {
+            $project: {
+                "_id": 0,
+                "user": "$user",
+                "rating": "$rating",
+                "overall": "$overall",
+                "review": "$review",
+                "date_time": "$date_time",
+                "satisfaction": "$satisfaction",
+                "apetite": "$apetite"
+            }
+        }
+    ])
+    return await Users.populate(rating_review, {
+        "path": "user",
+        "select": "first_name image"
+    })
+}
+
+const get_final_rating = async (destination_id) => {
+    const rating_review = await RatingReviews.aggregate([
+        {
+            $match: {
+                "reviewDest": destination_id,
+                "isValid": true,
+                "isRemoved": false
+            }
+        },
+        {
+            $group: {
+                "_id": null,
+                "overall": {
+                    $avg: "$rating"
+                },
+                "satisfaction": {
+                    $avg: "$satisfaction"
+                },
+                "apetite": {
+                    $avg: "$apetite"
+                },
+                "total": {
+                    $sum: 1
+                }
+            }
+        },
+        {
+            $project: {
+                "_id": 0,
+                // "total": "$total",
+                // "overall": "$overall",
+                // "satisfaction": "$satisfaction"
+            }
+        }
+    ])
+    if(rating_review.length > 0){
+        return rating_review[0]
+    } else {
+        return {
+            "overall": 0,
+            "satisfaction": 0,
+            "apetite": 0,
+            "total": 0
+        }
+    }
+}
+
 const disable_rating_review = async (rating_id, updated_by) => {
     const rating = await get_particular_rating_review(rating_id)
      const updated_document = await rating.updateOne({
@@ -117,5 +216,7 @@ module.exports = {
     update_rating_review,
     disable_rating_review,
     delete_rating_review,
-    get_destination_rating_review
+    get_destination_rating_review,
+    get_aggregation_rating,
+    get_final_rating
 }

@@ -34,6 +34,10 @@ router.route('/:restaurantID/analytics').get(inorder_controller.get_weekly_analy
 
 router.route('/:restaurantID/offers/check').get(offer_controller.check_offer_controller)
 
+router.route('/:restaurantID/offers').get(offer_controller.get_offers_controller)
+
+router.route('/:restaurantID/menu/:foodID').get(menu_controller.getParticularFood)
+
 router.use(token_middleware).route('/:restaurantID/ratings/create').post(ratings_controller.post_rating);
 
 

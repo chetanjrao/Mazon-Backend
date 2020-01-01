@@ -21,10 +21,14 @@ const {
     get_all_earnings_of_restaurant
 } = require('../services/inorder.service')
 const {
+    sendNotificationToDevices
+} = require('../helpers/firebase.helper')
+const {
     
 } = require("../services/utils.service")
 const {
     get_user_details,
+    get_user,
     get_user_details_by_email
 } = require("../services/user.service")
 const {
@@ -36,6 +40,9 @@ const {
 const {
     get_popular_food_of_restaurant
 } = require('../services/menu.service')
+const {
+    get_offer_details
+} = require('../services/offer.service')
 
 const calculate_menu_amount = async (req, res, next) => {
     const restaurant_id = req.params["restaurant_id"]
@@ -55,14 +62,12 @@ const place_inorder_controller = async (req, res, next) => {
     const email = req.body["email"]
     const user_id = res.locals["user_id"]
     const device_id = req.body["device_id"]
-    const user_document = await get_user_details_by_email(email)
-    const userID = user_document["_id"]
     const created_by = res.locals["user_id"]
     var is_waiter_taking = false
     if(res.locals["is_waiter"] == true){
         is_waiter_taking = true
     }
-    const inorder = await place_inorder(userID, device_id, restaurant_id, table_no, menu, order_token, offer_applied, name, phone, email, created_by, is_waiter_taking)
+    const inorder = await place_inorder(user_id, device_id, restaurant_id, table_no, menu, order_token, offer_applied, name, phone, email, created_by, is_waiter_taking)
     const final_amount = await calculate_amount(restaurant_id,  menu)
     const analytics_document = add_analytics(restaurant_id, "inorders", user_id)
     if(inorder != {} && inorder != undefined){
@@ -85,9 +90,10 @@ const get_order_summary = async (req, res, next) => {
     const inorder_token = req.headers["x-mazon-token"]
     const user = req.body["email"]
     const strict = req.body["strict"]
-    console.log(strict)
     const token_document = await get_token_details(inorder_token, user)
     const inorder_check = await get_order_using_token(inorder_token, strict)
+    var offer_amount = 0;
+    const offer_applied = token_document["offer_code"]
     const response = []
     var total_amount = 0;
     if(inorder_check.length > 0){
@@ -113,8 +119,27 @@ const get_order_summary = async (req, res, next) => {
             })
         }
     }
+    if(offer_applied.length > 0){
+        const offer = await get_offer_details(offer_applied)
+        if(total_amount > offer["min_amount"]){
+            if(offer["is_discount"]["is_percent"]){
+                var discount_amount = total_amount * offer["is_discount"]["discount_amount"] / 100
+                if(discount_amount > offer["is_discount"]["max"]){
+                    offer_amount = offer["is_discount"]["max"]
+                } else {
+                    offer_amount = discount_amount
+                }
+            } else {
+                offer_amount = offer["is_discount"]["discount_amount"];
+            }
+        }
+    }
+    var final_amount = total_amount - offer_amount
     res.json({
         "total": total_amount,
+        "offer_applied": offer_applied,
+        "offer_amount": offer_amount,
+        "final_price": final_amount,
         "orders": response
     })
 }
@@ -178,9 +203,45 @@ const get_weekly_inorders_data = async (req, res, next) => {
 
 const confirm_order_controller = async (req, res, next) => {
     const order_id = req.body["order_id"]
-    //const update_status = req.body["status"]
+    const device_id = req.body["device_id"]
     const updated_by = res.locals["user_id"]
-    const updated_order = await update_inorder(order_id, 2, updated_by)
+    const updated_order = await update_inorder(order_id, 2, updated_by, device_id)
+    const order = await show_inorder(order_id)
+    const devices = order["device_id"]
+    var payload = {
+        notification: {
+            title: `ORDER UPDATE`,
+            body: `Hey, Your Order ${order_id} has been confirmed and is being prepared in the kitchen`
+        }
+    }
+    sendNotificationToDevices(devices, payload)
+    if(updated_order != undefined){
+        res.json({
+            "message": "Order status updated succesfully",
+            "status": 200
+        })
+    } else {
+        res.json({
+            "status": 500,
+            "message": "Could not update order"
+        })
+    }
+}
+
+const cancel_order_controller = async (req, res, next) => {
+    const order_id = req.body["order_id"]
+    const device_id = req.body["device_id"]
+    const updated_by = res.locals["user_id"]
+    const updated_order = await update_inorder(order_id, 5, updated_by, device_id)
+    const order = await show_inorder(order_id)
+    const devices = order["device_id"]
+    var payload = {
+        notification: {
+            title: `ORDER UPDATE`,
+            body: `Hey, Your Order ${order_id} has been cancelled. Sorry for the inconvenience`
+        }
+    }
+    sendNotificationToDevices(devices, payload)
     if(updated_order != undefined){
         res.json({
             "message": "Order status updated succesfully",
@@ -197,7 +258,19 @@ const confirm_order_controller = async (req, res, next) => {
 const serve_order_controller = async (req, res, next) => {
     const order_id = req.body["order_id"]
     const updated_by = res.locals["user_id"]
-    const updated_order = await update_inorder(order_id, 3, updated_by)
+    const device_id = req.body["device_id"]
+    const updated_order = await update_inorder(order_id, 3, updated_by, device_id)
+    const order = await show_inorder(order_id)
+    const devices = order["device_id"]
+    var payload = {
+        notification: {
+            title: `ORDER PREPARED`,
+            body: `Hurray, Your Order ${order_id} is prepared now. Enjoy for food. Happy Dining.`
+        }
+    }
+    sendNotificationToDevices(devices, payload).then((response)=>{
+        console.log(JSON.stringify(response))
+    })
     if(updated_order != undefined){
         res.json({
             "message": "Order status updated succesfully",
@@ -213,10 +286,21 @@ const serve_order_controller = async (req, res, next) => {
 
 const finish_inorder_controller = async (req, res, next) => {
     const order_id = req.body["order_id"]
+    const amount = req.body["amount"]
+    const mode = req.body["mode"]
     const inorder = await show_inorder(order_id)
+    const order = await show_inorder(order_id)
+    const devices = order["device_id"]
+    var payload = {
+        notification: {
+            title: `ORDER COMPLETION`,
+            body: `Thank you, ${order["name"]} for dining with us`
+        }
+    }
+    sendNotificationToDevices(devices, payload)
     if(inorder != {} && inorder != undefined){
-        if(inorder["is_paid"] == true){
-            const finished_inorder = await finish_inorder(order_id)
+        if(inorder["is_paid"] != true){
+            const finished_inorder = await finish_inorder(order_id, amount, mode)
             if(finished_inorder["ok"]){
                 res.json({
                     "message": "Order completed successfully",
@@ -230,7 +314,7 @@ const finish_inorder_controller = async (req, res, next) => {
                 })
             }
         } else {
-            res.status(400)
+            res.status(404)
             res.json({
                 "message": "Could not find the inorder",
                 "status": 404
@@ -252,28 +336,19 @@ const generate_inorder_token = async (req, res, next) => {
     const table_no = req.body["table_no"]
     const offer_code = req.body["offer_code"]
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    const user_document = await get_user_details_by_email(user)
-    if(user_document["email"] != undefined){
-        const new_token = await create_inorder_token(restaurant_id, table_no, offer_code, user, ip, user_id)
-        const analytics_document = add_analytics(restaurant_id, "scans", user_id)
-        if(new_token["_id"] != undefined){
-            res.json({
-                "token": new_token["token"],
-                "expiry": new_token["expiry"],
-                "status": 200
-            })
-        } else {
-            res.status(500)
-            res.json({
-                "message": "Unable to create credentials",
-                "status": 500
-            })
-        }
-    } else {
-        res.status(403)
+    const new_token = await create_inorder_token(restaurant_id, table_no, offer_code, user, ip, user_id)
+    const analytics_document = add_analytics(restaurant_id, "scans", user_id)
+    if(new_token["_id"] != undefined){
         res.json({
-            "message": "Forbidden",
-            "status": 403
+            "token": new_token["token"],
+            "expiry": new_token["expiry"],
+            "status": 200
+        })
+    } else {
+        res.status(500)
+        res.json({
+            "message": "Unable to create credentials",
+            "status": 500
         })
     }
 }
@@ -310,9 +385,33 @@ const validate_inorder_token_controller = async (req, res, next) => {
     }
 }
 
+const validate_waiter_inorder_token_controller = async (req, res, next) => {
+    try {
+        const token = req.headers["x-mazon-token"]
+        const user = req.body["email"]
+        const restaurant_id = req.body["restaurant_id"]
+            const token_document = await validate_inorder_token(token, user, restaurant_id)
+            if(token_document){
+                res.locals["inorder-token"] = token
+                next()
+            } else {
+                res.json({
+                    "message": "Invalid credentials",
+                    "status": 401
+                })
+            }
+    } catch (error) {
+        res.json({
+            "message": "Invalid credentials",
+            "status": 401
+        })
+    }
+}
+
 module.exports = {
     "calculate_amount": calculate_menu_amount,
     "confirm_order": confirm_order_controller,
+    "cancel_order": cancel_order_controller,
     "serve_order": serve_order_controller,
     "finish_order": finish_inorder_controller,
     "place_inorder": place_inorder_controller,
@@ -320,5 +419,6 @@ module.exports = {
     "validate_token": validate_inorder_token_controller,
     "check_order": check_inorder_validity,
     "get_order_summary": get_order_summary,
-    "get_weekly_analytics": get_weekly_inorders_data
+    "get_weekly_analytics": get_weekly_inorders_data,
+    "waiter_token_validation": validate_waiter_inorder_token_controller
 }

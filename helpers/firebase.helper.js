@@ -14,12 +14,22 @@ const OPTIONS = {
 };
 
 const sendNotificationToDevice = async (device_id, payload) => {
-    const notification = await admin.messaging().sendToDevice(TEST_TOKEN, payload, OPTIONS)
+    const notification = await admin.messaging().sendToDevice(device_id, payload, OPTIONS)
+    return notification
+}
+
+const sendNotificationToDevices = async (device_ids, payload) => {
+    var message = {
+        ...payload,
+        tokens: device_ids
+    }
+    const notification = await admin.messaging().sendMulticast(message, false)
     return notification
 }
 
 module.exports = {
-    sendNotificationToDevice
+    sendNotificationToDevice,
+    sendNotificationToDevices
 }
 
 // Sample FCM Token: e2P6HOhLOUE:APA91bFWPZE6i1W1-f3moOOu2WJS7EkRoRt7P6nOwNBnk3AI5DU-6azSNQO-au5lha-pGpdCMnEyc_UdoptXG3mJboBkpGKps6WABlxSQVFHNMHBB1r2v-IwAzMwC5-1N208pjnunHoT

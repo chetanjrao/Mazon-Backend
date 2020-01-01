@@ -2,6 +2,8 @@ const Cuisines = require('../models/Cuisine')
 const City = require('../models/City')
 const Locality = require('../models/Locality')
 const Facility = require('../models/Facility')
+const PaymentMode = require('../models/PaymentMode')
+const Payment = require('../models/Payment')
 
 const generate_unique_identifier = (count) => {
     var result = '';
@@ -111,6 +113,32 @@ const get_facilities = async() => {
     return facilities
 }
 
+const create_payment_mode = async(name, is_bank) => {
+    const payment_mode_document = new PaymentMode({
+        name: name,
+        is_bank: is_bank
+    })
+    const new_payment_mode = await payment_mode_document.save()
+    return new_payment_mode
+}
+
+const create_payment = async (name, payment_mode, payment_amount, ip, user_agent, created_by)=>{
+    const payment_document = new Payment({
+        name: name,
+        payment_mode: payment_mode,
+        payment_amount: payment_amount,
+        ip: ip,
+        user_agent: user_agent,
+        created_by: created_by
+    })
+    const new_payment = await payment_document.save()
+    return new_payment
+}
+
+const get_payment_modes = async () => {
+    return await PaymentMode.find({})
+}
+
 
 module.exports = {
     generate_unique_identifier,
@@ -126,5 +154,8 @@ module.exports = {
     get_facilities,
     get_facility,
     get_localities,
-    get_locality
+    get_locality,
+    create_payment_mode,
+    create_payment,
+    get_payment_modes
 }

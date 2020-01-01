@@ -18,6 +18,11 @@ const {
 const {
     add_restaurant
 } = require('../services/restaurant.service')
+const {
+    get_aggregation_rating,
+    get_destination_rating_review,
+    get_final_rating
+} = require('../services/ratings.service')
 
 const add_restaurant_controller = async (req, res, next) => {
     const name = req.body["name"]
@@ -67,7 +72,13 @@ module.exports = {
     restaurant: async (req, res, next) => {
         const restaurantID = req.params.restaurantID
         const restaurant = await Restaurants.findOne({'_id': restaurantID})
-        res.json(restaurant)
+        const ratings_data = await get_final_rating(restaurantID)
+        const ratings_full = await get_destination_rating_review(restaurantID)
+        res.json({
+            restaurant,
+            ratings_data,
+            ratings_full
+        })
     },
     inorders: async (req, res, next) => {
         const restaurant_id = req.params["restaurantID"]

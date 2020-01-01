@@ -12,10 +12,8 @@ const {
 } = require("../controllers/user.controller")
 const bookings = require("../controllers/booking.controller")
 
-router.use(token_middleware).use(validate_token).route("/create").post(bookings.create_booking)
-router.route("/token").post(bookings.generate_token)
-router.use(validate_token).route("/details").get(bookings.get_booking)
-router.route("/update").patch(bookings.update_booking)
-router.route("/finish").delete(bookings.finish_booking)
+router.route("/create").post(bookings.create_booking)
+// router.route("/update").patch(bookings.update_booking)
+// router.route("/finish").delete(bookings.finish_booking)
 
 module.exports = router

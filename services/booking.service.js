@@ -4,16 +4,18 @@ const {
 } = require("./utils.service")
 const BookingToken = require("../models/BookingToken")
 
-const place_booking = async (rId, email, phone, token, male, female, name, coupon, date, time, created_by) => {
+const place_booking = async (rId, email, phone, otp, male, female, name, coupon, date, time, created_by, device) => {
+    console.log(device)
     const new_booking_document = new Bookings({
         rId: rId,
         email: email,
         phone: phone,
-        token: token,
+        otp: otp,
         male: male,
         female: female,
         name: name,
         date: date,
+        device_id: [device],
         time: time,
         coupon: coupon,
         created_by: created_by
@@ -93,7 +95,7 @@ const get_bookings_with_restaurant = async (restaurant) => {
 }
 
 
-const finish_booking = async (amount, payment_mode, finished_by) => {
+const finish_booking = async (amount, payment_mode, finished_by, id) => {
     const finished_document = await Bookings.findOneAndUpdate({
         "_id": id
     }, {

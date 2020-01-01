@@ -25,7 +25,7 @@ const BookingSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    token: {
+    otp: {
         type: String,
         required: true
     },
@@ -78,7 +78,11 @@ const BookingSchema = new mongoose.Schema({
         default: 0
     },
     payment_mode: {
-        type: Number //1) Credit Card/Debit Card 2)Paytm/UPI/G.Pay/PhonePe 3)Cash
+        type: String //1) Credit Card/Debit Card 2)Paytm/UPI/G.Pay/PhonePe 3)Cash
+    },
+    device_id: {
+        type: [String],
+        default: []
     },
     last_updated: {
         type: Date,

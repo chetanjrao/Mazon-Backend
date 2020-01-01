@@ -18,8 +18,8 @@ var inOrderSchema = new Schema({
         required: true
     },
     device_id: {
-        type: String,
-        required: true
+        type: [String],
+        default: []
     },
     menu: [
         {

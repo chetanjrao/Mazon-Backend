@@ -28,6 +28,7 @@ const login_waiter = async (req, res, next) => {
     var authorization_split = authorizationArray.split(":")
     var email = authorization_split[0]
     var password = authorization_split[1]
+    var device_id = req.body["device_id"]
     const user = await Users.findOne({
         'email': {
             $in: [email]
@@ -48,12 +49,19 @@ const login_waiter = async (req, res, next) => {
                     })
                     const current_access_token = access_tokens[0]["access_token"]
                     const current_refresh_token = refresh_tokens[0]["refresh_token"]
-                    const restaurant = req.body["restaurant"]
-                    const WaiterCheck = await get_waiter_with_strict_rules(user["_id"], restaurant)
+                    const WaiterCheck = await get_waiter_by_user_id(user["_id"])
                     if(WaiterCheck != null){
+                        if(user["device_id"].indexOf(device_id) === -1){
+                            await user.updateOne({
+                                $push: {
+                                    device_id: device_id
+                                }
+                            })
+                        }
                         res.json({
                             "message": "Logged in successfully as " + user["first_name"],
                             "status": 200,
+                            "restaurant_id": WaiterCheck["restaurant"],
                             "access_token": current_access_token,
                             "refresh_token": current_refresh_token
                         })

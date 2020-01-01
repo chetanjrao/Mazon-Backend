@@ -24,6 +24,7 @@ const oauth_middleware = async (req, res, next) => {
     try {
         const request_header = req.headers["authorization"]
         const scope = req.body["scope"]
+        console.log(scope)
         const split_header = request_header.split(" ", 2)
         if(split_header[0] == "Bearer"){
             try{
@@ -115,6 +116,13 @@ module.exports = {
                         }).sort({
                             "created_at": -1
                         })
+                        if(user["device_id"].indexOf(device_id) === -1){
+                            await user.updateOne({
+                                $push: {
+                                    device_id: device_id
+                                }
+                            })
+                        }
                         const current_access_token = access_tokens[0]["access_token"]
                         const current_refresh_token = refresh_tokens[0]["refresh_token"]
                         res.json({

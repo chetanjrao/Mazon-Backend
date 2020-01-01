@@ -6,18 +6,28 @@ const {
     update_inorder_content
 } = require('./menu.service')
 const {
+    get_user
+} = require('../services/user.service')
+const {
     get_restaurant_owner_details
 } = require('./restaurant.service')
 const InorderToken = require("../models/InorderToken")
 const {
     generate_unique_identifier
 } = require("./utils.service")
+const {
+    get_restaurant
+} = require('./restaurant.service')
 const  {
+    sendNotificationToDevices,
     sendNotificationToDevice
 } = require('../helpers/firebase.helper')
 const {
     inorder_payload
 } = require('./payload.service')
+const {
+    get_partners
+} = require('../services/partner.service')
 
 const create_inorder_token = async (restaurant_id, table_no, offer_code="", user, ip, created_by) => {
     var token = generate_unique_identifier(24)
@@ -194,7 +204,7 @@ const place_inorder = async (user, device_id, restaurant_id, table_no, menu, ord
         user: user,
         rId: restaurant_id,
         rTable: table_no,
-        device_id: device_id,
+        device_id: [device_id],
         menu: menu,
         order_date_time: new Date(),
         order_status: order_status,
@@ -209,7 +219,19 @@ const place_inorder = async (user, device_id, restaurant_id, table_no, menu, ord
     for(var i=0; i < menu.length; i++){
         await update_inorder_content(restaurant_id, new_inorder["_id"], menu[i].cId, menu[i].fId)
     }
-    sendNotificationToDevice("123", inorder_payload("Chethan", "Test", 123))
+    const partner = await get_partners(restaurant_id)
+    const restaurant = await get_restaurant(restaurant_id)
+    var device_ids = []
+    for(var i=0;i<partner.length;i++){
+        const user = await get_user(partner[i]["user"])
+        for(var j=0;j<user["device_id"].length;j++){
+            device_ids.push(user["device_id"][j])
+        }
+    }
+    console.log(device_ids)
+    sendNotificationToDevices(device_ids, inorder_payload(restaurant["name"], name)).then((response)=>{
+        console.log(JSON.stringify(response))
+    })
     return new_inorder
 }
 
@@ -250,12 +272,13 @@ const get_token_details = async (token, user) => {
     return token_document
 }
 
-const finish_inorder = async (order_id, amount) => {
+const finish_inorder = async (order_id, amount, mode) => {
     const inorder = await show_inorder(order_id)
     const updated_inorder = await inorder.update({
         $set: {
             "order_status": 4,
             "is_paid": true,
+            "payment_mode": mode,
             "amount": amount
         }
     })
@@ -266,13 +289,23 @@ const add_payment = async (order_id, payment_mode, amount) => {
     
 }
 
-const update_inorder = async (order_id, update_status, updated_by) => {
+const update_inorder = async (order_id, update_status, updated_by, device_id) => {
     const inorder = await show_inorder(order_id)
-    const updated_order = await inorder.update({
+    if(inorder["device_id"].indexOf(device_id) === -1){
+        await inorder.updateOne({
+            $push: {
+                device_id: device_id
+            }
+        })
+    }
+    const updated_order = await inorder.updateOne({
         $set: {
             "order_status": update_status,
             "last_updated_by": updated_by
         }
+    })
+    sendNotificationToDevice(device_id, inorder_payload("Manager", inorder["name"])).then((resp)=>{
+        console.log(JSON.stringify(resp))
     })
     return updated_order
 }

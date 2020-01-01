@@ -38,6 +38,7 @@ const {
 
 const login_partner = async (req, res, next) => {
     var authroizationHeader = req.headers["authorization"];
+    const device_id = req.body["device_id"]
     var base64AuthData = authroizationHeader.substring(6)
     var authorizationArray = decodeBase64toString(base64AuthData)
     var authorization_split = authorizationArray.split(":")
@@ -66,6 +67,13 @@ const login_partner = async (req, res, next) => {
                     const restaurant = req.body["restaurant_id"]
                     const PartnerCheck = await partner_details_specs(user["_id"])
                     if(PartnerCheck != null){
+                        if(user["device_id"].indexOf(device_id) === -1){
+                            await user.updateOne({
+                                $push: {
+                                    device_id: device_id
+                                }
+                            })
+                        }
                         res.json({
                             "message": "Logged in successfully as " + user["first_name"],
                             "status": 200,
@@ -213,6 +221,8 @@ const check_partner_middleware = async (req, res, next) => {
     const user = res.locals["user_id"]
     const restaurant = req.body["restaurant_id"]
     const PartnerCheck = await partner_details(user, restaurant)
+    console.log(user + " " + restaurant)
+    console.log(PartnerCheck)
     if(PartnerCheck != null){
         res.locals["is_partner"] = true
         next()
@@ -246,6 +256,13 @@ function decodeBase64toString(string){
     return Buffer.from(string, 'base64').toString()
 }
 
+// const create_waiter_post_controller = async (req, res, next) => {
+//     const user_creation = await create_u
+// }
+
+// const create_waiter_get_controller = async (req, res, next) => {
+//     res.sendFile()
+// }
 
 module.exports = {
     login_partner,

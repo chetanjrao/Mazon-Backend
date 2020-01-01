@@ -16,14 +16,34 @@ const {
     get_bookings_with_restaurant
 } = require("../services/booking.service")
 const {
+    get_restaurant
+} = require('../services/restaurant.service')
+const {
     get_user_details
 } = require("../services/user.service")
+const {
+    generate_otp
+} = require('../services/utils.service')
+const {
+    add_analytics
+} = require('../services/analytics.service')
+const {
+    sendNotificationToDevice,
+    sendNotificationToDevices
+} = require('../helpers/firebase.helper')
+const {
+    booking_payload,
+    booking_comfirm_payload,
+    booking_cancel_payload,
+    booking_activate_payload,
+    booking_finish_payload
+} = require('../services/payload.service')
 
 const create_booking_controller = async (req, res, next) => {
     const rId = req.body["rId"]
     const email = req.body["email"]
     const phone = req.body["phone"]
-    const token = res.locals["booking-token"]
+    const otp = generate_otp(6)
     const male = req.body["male"]
     const female = req.body["female"]
     const name = req.body["name"]
@@ -31,8 +51,10 @@ const create_booking_controller = async (req, res, next) => {
     const date = req.body["date"]
     const time = req.body["time"]
     const user_id = res.locals["user_id"]
-    const booking = await place_booking(rId, email, phone, token, male, female, name, coupon, date, time)
+    const device_id = req.body["device_id"]
+    const booking = await place_booking(rId, email, phone, otp, male, female, name, coupon, date, time, user_id, device_id)
     const analytics_document = add_analytics(rId, "bookings", user_id)
+    sendNotificationToDevice(device_id, booking_payload("", name, otp.toString()))
     if(booking["_id"] != undefined){
         res.json({
             "message": "Booking placed",
@@ -81,8 +103,37 @@ const confirm_booking_controller = async (req, res, next) => {
     const booking_details = await get_booking_on_reference(booking_id)
     if(booking_details != null){
         const updated_status_document = await edit_status(booking_id, 2, user)
+        const restaurant = await get_restaurant(booking_details["rId"])
+        sendNotificationToDevices(booking_details["device_id"], booking_comfirm_payload("", booking_details["name"], restaurant["name"]))
         if(updated_status_document != null){
-            res.send("ok")
+            res.send("ok") 
+        } else {
+            res.status(500)
+            res.json({
+                "message": "Error updating booking",
+                "status": 500
+            })
+        }
+    } else {
+        res.status(404)
+        res.json({
+            "message": "Invalid booking requested",
+            "status": 404
+        })
+    }
+}
+
+const cancel_booking_controller = async (req, res, next) => {
+    const user = res.locals["user_id"]
+    const booking_id = req.body["booking_id"]
+    const booking_details = await get_booking_on_reference(booking_id)
+    if(booking_details != null){
+        const updated_status_document = await edit_status(booking_id, 5, user)
+        const restaurant = await get_restaurant(booking_details["rId"])
+        sendNotificationToDevices(booking_details["device_id"], booking_cancel_payload("", booking_details["name"], restaurant["name"]))
+        if(updated_status_document != null){
+            res.send("ok") 
+        } else {
             res.status(500)
             res.json({
                 "message": "Error updating booking",
@@ -104,8 +155,11 @@ const activate_booking_controller = async (req, res, next) => {
     const booking_details = await get_booking_on_reference(booking_id)
     if(booking_details != null){
         const updated_status_document = await edit_status(booking_id, 3, user)
+        const restaurant = await get_restaurant(booking_details["rId"])
+        sendNotificationToDevices(booking_details["device_id"], booking_activate_payload("", booking_details["name"], restaurant["name"]))
         if(updated_status_document != null){
-            res.send("ok")
+            res.send("ok") 
+        } else {
             res.status(500)
             res.json({
                 "message": "Error updating booking",
@@ -179,14 +233,13 @@ const validate_booking_token_controller = async (req, res, next) => {
 const finish_booking_controller = async (req, res, next) => {
     const amount = req.body["amount"]
     const payment_mode = req.body["payment_mode"]
-    const user = res.locals.user
-    const finished_booking = await finish_booking(amount, payment_mode, user)
+    const user = res.locals["user_id"]
+    const booking_id = req.body["booking_id"]
+    const finished_booking = await finish_booking(amount, payment_mode, user, booking_id)
+    const restaurant = await get_restaurant(finished_booking["rId"])
+    sendNotificationToDevices(finished_booking["device_id"], booking_finish_payload("", finished_booking["name"], restaurant["name"], amount))
     if(finished_booking["_id"] != undefined){
-        res.status(200)
-        res.json({
-            "message": "Booking finished successfully",
-            "status": 200
-        })
+        res.send("ok")
     } else {
         res.status(500)
         res.json({
@@ -208,6 +261,7 @@ module.exports = {
     "finish_booking": finish_booking_controller,
     "get_booking": get_booking_controller,
     "confirm_booking": confirm_booking_controller,
+    "cancel_booking": cancel_booking_controller,
     "activate_booking": activate_booking_controller,
     "validate_token": validate_booking_token_controller,
     "get_bookings": get_bookings_controller

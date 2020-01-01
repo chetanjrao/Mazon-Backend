@@ -32,6 +32,19 @@ const get_user_details = async (userID) => {
         throw error
     }
 }
+const get_user = async (userID) => {
+    const user = await Users.findOne({
+        "$and": [
+            {
+                "_id": userID
+            },
+            {
+                "is_deactivated.is_deactivated": false
+            }
+        ]
+    })
+   return user
+}
 const get_user_details_by_email = async (email) => {
     const user = await Users.findOne({
         "$and": [
@@ -82,6 +95,8 @@ const get_user_details_by_email_or_mobile = async (email='', mobile='') => {
     }
     return null
 }
+
+
 
 const create_mobile_otp = async (user, mobile, scope) => {
     const otp = Number.parseInt(generate_otp(6))
@@ -148,5 +163,6 @@ module.exports = {
     get_user_details_by_email_or_mobile,
     create_mobile_otp,
     verify_email,
-    verify_otp
+    verify_otp,
+    get_user
 }

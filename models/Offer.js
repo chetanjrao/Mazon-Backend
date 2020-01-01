@@ -30,6 +30,26 @@ const OfferSchema = new mongoose.Schema({
             default: []
         }
     },
+    is_discount: {
+        is_discount: {
+            type: Boolean,
+            default: false
+        },
+        is_percent: {
+            type: Boolean,
+            default: false
+        },
+        discount_amount: {
+            type: Number
+        },
+        max: {
+            type: Number
+        }
+    },
+    min_amount: {
+        type: Number,
+        default: 0
+    },
     offer_type: { 
         type: Number,
         default: 1
