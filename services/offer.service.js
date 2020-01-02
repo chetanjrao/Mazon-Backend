@@ -51,35 +51,25 @@ const check_offer = async (restaurant_id, offer_code) => {
 }
 
 const avail_offer = async (restaurant_id, offer_id) => {
-    const availed_restaurant = await Restaurants.findOne({
-        "_id": restaurant_id
+    const availed_offer = await Offers.findOneAndUpdate({
+        "code": offer_id
+    }, {
+        $addToSet: {
+            "is_universal.applies_to": restaurant_id
+        }
     })
-    if(availed_restaurant["offers"].indexOf(offer_id) == -1){
-        await availed_restaurant.updateOne({
-            $set: {
-                $push: {
-                    offers: offer_id
-                }
-            }
-        })
-    }
-    return availed_restaurant
+    return availed_offer
 }
 
 const unavail_offer = async (restaurant_id, offer_id) => {
-    const availed_restaurant = await Restaurants.findOne({
-        "_id": restaurant_id
+    const availed_offer = await Offers.findOneAndUpdate({
+        "code": offer_id
+    }, {
+        $pull: {
+            "is_universal.applies_to": restaurant_id
+        }
     })
-    if(availed_restaurant["offers"].indexOf(offer_id) != -1){
-        await availed_restaurant.updateOne({
-            $set: {
-                $pull: {
-                    offers: offer_id
-                }
-            }
-        })
-    }
-    return availed_restaurant
+    return availed_offer
 }
 
 const get_restaurant_offers = async (restaurant_id) => {
@@ -120,14 +110,16 @@ const get_all_offers = async (restaurant_id) => {
     if(date.getDay() != 0 && date.getDay() != 6){
         const offers = await Offers.find({
             "is_universal.is_universal": false,
-            "on_weekdays": true
+            "on_weekdays": false
         })
+        data["is_weekday"] = true
         data["offers"] = offers
     } else {
         const offers = await Offers.find({
             "is_universal.is_universal": false,
-            "on_weekdays": false
+            "on_weekdays": true
         })
+        data["is_weekday"] = false
         data["offers"] = offers
     }
     const availed = await Offers.find({

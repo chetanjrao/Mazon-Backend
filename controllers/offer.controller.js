@@ -69,13 +69,10 @@ const check_offer_controller = async (req, res, next) => {
 
 const avail_offer_controller = async (req, res, next) => {
     const restaurant_id = req.body["restaurant_id"]
-    const offer_id = req.body["offer_id"]
+    const offer_id = req.body["offer_code"]
     const avail_offer_document = await avail_offer(restaurant_id, offer_id)
     if(avail_offer_document != null){
-        res.json({
-            "message": "Offer availed succesfully",
-            "status": 200
-        })
+        res.send("ok")
     } else {
         res.status(500)
         res.json({
@@ -86,7 +83,18 @@ const avail_offer_controller = async (req, res, next) => {
 }
 
 const unavail_offer_controller = async (req, res, next) => {
-    
+    const restaurant_id = req.body["restaurant_id"]
+    const offer_id = req.body["offer_code"]
+    const avail_offer_document = await unavail_offer(restaurant_id, offer_id)
+    if(avail_offer_document != null){
+        res.send("ok")
+    } else {
+        res.status(500)
+        res.json({
+            "message": "Failed to unavail offer",
+            "status": 200
+        })
+    }
 }
 
 const get_offers_controller = async (req, res, next) =>{
