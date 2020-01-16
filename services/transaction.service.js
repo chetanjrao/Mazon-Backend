@@ -1,9 +1,9 @@
-const Transactions = require('../models/Transaction.js')
+const Transactions = require('../models/transaction.model')
 const { generate_unique_identifier } = require('./utils.service')
 
 const create_transaction = async(purpose, amount, type, ip, action_by, latitude, longitude, user_agent) => {
-    const transaction_reference = generate_unique_identifier(16)
-    while(validate_transaction(transaction_reference)){
+    var transaction_reference = generate_unique_identifier(16)
+    while(!validate_transaction(transaction_reference)){
         transaction_reference = generate_unique_identifier(16)
     }
     const transaction_message = purpose
@@ -22,7 +22,7 @@ const create_transaction = async(purpose, amount, type, ip, action_by, latitude,
             latitude: latitude,
             longitude: longitude
         },
-        action: transaction_action,
+        user: transaction_action,
         user_agent: transaction_user_agent,
 
     })
@@ -37,7 +37,7 @@ const get_transaction = async (transaction_reference) => {
         "user_agent": 0,
         "ip": 0
     })
-    if(transaction[0] != undefined){
+    if(transaction == null){
         return transaction
     }
     return {}
@@ -57,7 +57,8 @@ const validate_transaction = async (transaction_reference) => {
     const transaction = await Transactions.findOne({
         "reference": transaction_reference
     })
-    if(transaction[0] == undefined){
+    console.log(transaction)
+    if(transaction == null){
         return true
     }
     return false

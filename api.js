@@ -10,8 +10,9 @@ const {
     app,
     http
 } = require('./helpers/root.helper')
-const publicDirectory = require('path').join(__dirname, process.env.PUBLIC_RESTAURANT_DIRECTORY);
+const publicDirectory = require('path').join(__dirname, 'public');
 app.use(express.static(publicDirectory))
+console.log(publicDirectory)
 let bodyparser = require('body-parser')
 const formData = require('express-form-data')
 const options = {
@@ -47,6 +48,8 @@ app.use('/api/library', BaseRouter)
 app.use('/api/analytics', AnalyticsRouter)
 app.use('/api/waiters', WaiterRouter)
 app.use('/api/partners', PartnerRoute)
+const AuthRouter = require('./routes/auth.route')
+app.use('/api/auth', AuthRouter)
 
 app.use((err, req, res, next)=>{
     const error = app.get('env') === 'development' ? err : {}
@@ -61,6 +64,6 @@ app.use((err, req, res, next)=>{
 
 
 
-http.listen(9000, function(){
+app.listen(9000, function(){
     console.log("Server started at localhost & listening on 9000");
   });

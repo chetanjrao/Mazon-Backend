@@ -12,7 +12,7 @@ const {
 } = require("../controllers/user.controller")
 const bookings = require("../controllers/booking.controller")
 
-router.route("/create").post(bookings.create_booking)
+router.use(token_middleware).route("/create").post(bookings.create_booking)
 // router.route("/update").patch(bookings.update_booking)
 // router.route("/finish").delete(bookings.finish_booking)
 

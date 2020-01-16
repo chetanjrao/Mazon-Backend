@@ -13,6 +13,13 @@ const {
 const {
     finish_inorder
 } = require('../services/inorder.service')
+const Settlements = require('../models/Settlements')
+const {
+    debit_points_to_wallet
+} = require('../services/wallet.service')
+const {
+    create_transaction
+} = require('../services/transaction.service')
 
 module.exports = {
     restaurant_ratings: async (req, res, next) => {
@@ -28,21 +35,44 @@ module.exports = {
         const user = res.locals["user_id"]
         const email = req.body["email"]
         const type = req.body["type"]
+        const apetite = req.body["apetite"]
+        const is_using_wallet = req.body["is_using_wallet"]
+        const satisfaction = req.body["satisfaction"]
         const references = req.body["references"]
+        const amount = req.body["amount"]
+        const payment_mode = req.body["payment_mode"]
+        const order_token = req.headers["x-mazon-token"]
+        const payment_id = req.body["payment_id"]
+        const restaurant_id = req.body["restaurant_id"]
+        const order_id = req.body["order_id"]
+        var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        if(payment_mode != "CASH"){
+            const new_settlement_document = new Settlements({
+                order_id: order_id,
+                payment_id: payment_id,
+                inorder_token: order_token,
+                user_id: user,
+                restaurant_id: restaurant_id
+            })
+            const new_settlement = await new_settlement_document.save()
+            
+        }
+        if(is_using_wallet){
+            const waleet_points = req.body["wallet_points"]
+            const transaction_doc = await create_transaction(`Inorder ID: ${order_token}`, waleet_points, 2, ip, user)
+            await debit_points_to_wallet(user, transaction_doc["reference"], waleet_points)
+        }
         switch(type){
             case 2:
                 for(var i=0;i<reviews.length;i++){
-                    post_rating_review(reviews[i]["food_id"], type, reviews[i]["rating"], reviews[i]["reference"], reviews[i]["review"], user, reviews[i]["apetite"], reviews[i]["satisfaction"], email)
+                    post_rating_review(reviews[i]["food_id"], type, reviews[i]["rating"], reviews[i]["reference"], reviews[i]["review"], user, apetite, satisfaction, email)
                 }
                 for(var j=0;j<references.length;j++){
-                    await finish_inorder(references[j])
+                    await finish_inorder(references[j], amount, payment_mode)
                 }
                 break;
         }
-        res.json({
-            "message": "Reviews posted successfully",
-            "status": 200
-        })
+        res.send("ok")
     },
     get_overall_rating: async (req, res,next) => {
         const refID = req.params["refID"]

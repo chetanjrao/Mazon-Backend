@@ -1,5 +1,5 @@
-const Partners = require('../models/Partner')
-const Inorders = require('../models/Inorder')
+const Partners = require('../models/partner.model')
+const Inorders = require('../models/inorder.model')
 
 const create_partner = async (user, restaurant) => {
     const new_partner_document = new Partners({

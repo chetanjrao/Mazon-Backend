@@ -1,4 +1,4 @@
-const Events = require('../models/Event')
+const Events = require('../models/event.model')
 
 const create_event = async (name, restaurant, city, start_date, end_date, description, start_time, end_time, venue, latitude, longitude, image="", created_by, incharge_name, incharge_contact, website='') => {
     const event_document = new Events({

@@ -1,5 +1,8 @@
-const Offers = require('../models/Offer')
-const Restaurants = require('../models/Restaurant')
+const Offers = require('../models/offer.model')
+const Restaurants = require('../models/restaurant.model')
+const {
+    get_user
+} = require('./user.service')
 
 const create_offer = async (code, image='', description, expiry, offer_type, is_discount, is_percent, discount_amount, max, min_amount, on_weekdays, created_by, is_universal=true, applies_to=[], availed_by=[]) => {
     const offer_document = new Offers({
@@ -48,6 +51,45 @@ const check_offer = async (restaurant_id, offer_code) => {
         return false
     }
     return false
+}
+
+const check_offer_strict_user = async (restaurant_id, offer_code, user_id) => {
+    const offer_document = await Offers.findOne({
+        "code": offer_code,
+        "is_approved.is_approved": true
+    })
+    if(offer_document != null){
+        const now = new Date()
+        const expiry = offer_document["expiry"]
+        if(now < expiry){
+            if(offer_document["is_universal"]["is_universal"]){
+                return true
+            } else {
+                if(offer_document["is_universal"]["applies_to"].indexOf(restaurant_id) != -1){
+                    const user_document = await get_user(user_id)
+                    const user_avails = user_document["offers_availed"]
+                    var user_offers = []
+                    for(var i=0;i<user_avails.length;i++){
+                        user_offers.push(user_avails[i]["offer_code"])
+                    }
+                    var user_offer_count = 0;
+                    for(var j=0;j<user_offers.length;j++){
+                        if(user_offers[j] == offer_code){
+                            user_offer_count += 1;
+                        }
+                    }
+                    if(user_offer_count < offer_document["max_user_avails"]){
+                        return offer_document
+                    }
+                    
+                    return null
+                }
+                return null
+            }
+        } 
+        return null
+    }
+    return null
 }
 
 const avail_offer = async (restaurant_id, offer_id) => {
@@ -145,5 +187,6 @@ module.exports = {
     get_restaurant_offers,
     get_offer_details,
     check_offer,
-    get_all_offers
+    get_all_offers,
+    check_offer_strict_user
 }

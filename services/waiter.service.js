@@ -1,5 +1,5 @@
-const Waiter = require('../models/Waiter')
-const WaiterVerificationToken = require('../models/WaiterVerificationToken')
+const Waiter = require('../models/waiter.model')
+const WaiterVerificationToken = require('../models/waiterverificationtoken.model')
 const {
     mailer
 } = require('../helpers/utils.helper')

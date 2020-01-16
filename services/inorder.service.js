@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const Inorder = require('../models/Inorder')
+const Inorder = require('../models/inorder.model')
 const {
     getFoodDetails,
     get_particular_food_details,
@@ -11,7 +11,7 @@ const {
 const {
     get_restaurant_owner_details
 } = require('./restaurant.service')
-const InorderToken = require("../models/InorderToken")
+const InorderToken = require("../models/inordertoken.model")
 const {
     generate_unique_identifier
 } = require("./utils.service")
@@ -28,6 +28,8 @@ const {
 const {
     get_partners
 } = require('../services/partner.service')
+const Restaurants = require('../models/restaurant.model')
+const Users = require('../models/user.model')
 
 const create_inorder_token = async (restaurant_id, table_no, offer_code="", user, ip, created_by) => {
     var token = generate_unique_identifier(24)
@@ -57,9 +59,8 @@ const create_inorder_token = async (restaurant_id, table_no, offer_code="", user
     return new_token
 }
 
-const get_inorder_token = async (token, user, restuarant_id) => {
+const get_inorder_token = async (user, restuarant_id) => {
     return await InorderToken.findOne({
-        "token": token,
         "user": user,
         "restaurant_id": restuarant_id
     })
@@ -78,14 +79,14 @@ const get_order_using_token = async (order_token, strict) => {
             $or: [
                 {
                     "order_token": order_token,
-                    "order_status": 2,
+                    "order_status": 3,
                     "is_paid": false
                 },
                 {
                     "order_token": order_token,
-                    "order_status": 3,
+                    "order_status": 2,
                     "is_paid": false
-                },
+                }
             ]
         })
         return inorder_document
@@ -229,7 +230,28 @@ const place_inorder = async (user, device_id, restaurant_id, table_no, menu, ord
         }
     }
     console.log(device_ids)
-    sendNotificationToDevices(device_ids, inorder_payload(restaurant["name"], name)).then((response)=>{
+    if(offer_applied != null && offer_applied.length > 0){
+        await Users.findOneAndUpdate({
+            "email": email
+        }, {
+            $push: {
+                "offers_availed": {
+                    "offer_code": offer_applied,
+                    "availed_at": new Date()
+                }
+            }
+        })
+    }
+    var devices = []
+    devices.push(device_id)
+    const restaurant_manager = await get_partners(restaurant_id)
+    for(var i=0;i<restaurant_manager.length;i++){
+        var user_details = await get_user(restaurant_manager[i]["user"])
+        for(var j=0;j<user_details["device_id"].length;j++){
+            devices.push(user_details["device_id"][j])
+        }
+    }
+    sendNotificationToDevices(devices, inorder_payload(restaurant["name"], name)).then((response)=>{
         console.log(JSON.stringify(response))
     })
     return new_inorder
@@ -247,6 +269,23 @@ const get_inorders_with_email = async (email) => {
         "email": email
     })
     return inorders
+}
+
+const get_inorders_with_email_base = async (email) => {
+    const inorders = await Inorder.find({
+        "email": email
+    }, {
+        "order_token": 0,
+        "order_date_time": 0,
+        "menu": 0,
+        "device_id": 0,
+        "__v": 0,
+        "created_by": 0
+    })
+    return Restaurants.populate(inorders, {
+        path: "rId",
+        select: "name"
+    })
 }
 
 const get_active_inorder_with_email = async (email) => {
@@ -360,6 +399,7 @@ module.exports = {
     create_inorder_token,
     validate_inorder_token,
     get_inorders_with_email,
+    get_inorders_with_email_base,
     get_inorders_with_restaurant,
     get_active_inorder_with_email,
     get_order_using_token,

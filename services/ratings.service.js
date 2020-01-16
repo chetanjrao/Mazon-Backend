@@ -1,13 +1,13 @@
 const mongoose = require('mongoose')
-const RatingReviews = require('../models/RatingReview')
-const Restaurant = require('../models/Restaurant')
+const RatingReviews = require('../models/ratingreview.model')
+const Restaurant = require('../models/restaurant.model')
 const {
     check_restaurant
 } = require('../services/restaurant.service')
 const {
     get_user_details
 } = require('../services/user.service')
-const Users = require('../models/User')
+const Users = require('../models/user.model')
 
 const getRestaurantRatingReviews = async (restaurantID) => {
     const check_restaurant_validity = await check_restaurant(restaurantID)
@@ -210,6 +210,20 @@ const delete_rating_review = async (rating_id, deleted_by) => {
      return deleted_document
 }
 
+const get_user_rating_review = async (user_id) => {
+    const ratings = await RatingReviews.find({
+        "user": user_id
+    })
+    return ratings
+}
+
+const get_user_email_rating_review = async (user_email) => {
+    const ratings = await RatingReviews.find({
+        "email": user_email
+    })
+    return ratings
+}
+
 module.exports = {
     getRestaurantRatingReviews,
     post_rating_review,
@@ -218,5 +232,7 @@ module.exports = {
     delete_rating_review,
     get_destination_rating_review,
     get_aggregation_rating,
-    get_final_rating
+    get_final_rating,
+    get_user_rating_review,
+    get_user_email_rating_review
 }

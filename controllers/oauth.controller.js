@@ -6,13 +6,24 @@
  */
 
 const OauthClient = require('../models/OauthClient')
-const OauthAuthorization = require('../models/OauthAuthorization')
-const Users = require('../models/User')
+const OauthAuthorization = require('../models/oauthauthorization.model')
+const Users = require('../models/user.model')
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
 const uuid = require('uuid/v4')
-const AccessToken = require('../models/AccessToken')
-const RefreshToken = require('../models/RefreshToken')
+const {
+    create_accesstoken,
+    validate_accesstoken,
+    revoke_accesstokens
+} = require('../services/accesstoken.service')
+const {
+    create_refreshtoken,
+    validate_refreshtoken,
+    revoke_refreshtokens
+} = require('../services/refereshtoken.service')
+const {
+    validate_passkey
+} = require('../services/passkey.service')
 
 module.exports = {
     register: async (req, res, next) => {
@@ -100,7 +111,7 @@ module.exports = {
         var code_challenge = req.body.code_challenge
         var project_id = req.body.project_id
         var code_challenge_method = req.body.code_challenge_method
-        var requesting_client = req.headers["user-agent"]
+        var user_agent = req.headers["user-agent"]
         var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
         var referrer = req.headers.referrer || req.headers.referer
         const oauth_client_check = await OauthClient.findOne({'client_id': client_id})

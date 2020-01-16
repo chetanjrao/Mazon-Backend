@@ -1,6 +1,7 @@
 const {
     get_wallet_details,
 } = require("../services/wallet.service")
+const ERROR_CODES = require('../helpers/constants.helper')
 
 const get_wallet_details_controller = async (req, res, next) =>{
     const reference = req.body["reference"]
@@ -11,7 +12,8 @@ const get_wallet_details_controller = async (req, res, next) =>{
         res.status(404)
         res.json({
             "message": "No wallet found",
-            "status": 404
+            "status": 404,
+            "error_code": ERROR_CODES.DOCUMENT_NOT_FOUND
         })
     }
 }

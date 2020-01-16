@@ -5,7 +5,8 @@ const {
     get_restaurant_offers,
     unavail_offer,
     get_all_offers,
-    check_offer
+    check_offer,
+    check_offer_strict_user
 } = require('../services/offer.service')
 
 
@@ -67,6 +68,22 @@ const check_offer_controller = async (req, res, next) => {
     }
 }
 
+const check_offer__strict_controller = async (req, res, next) => {
+    const restaurant_id = req.params["restaurantID"]
+    const offer_code = req.query["offer_code"]
+    const user_id = res.locals["user_id"]
+    const offer_validity = await check_offer_strict_user(restaurant_id, offer_code, user_id)
+    if(offer_validity != null){
+        res.json(offer_validity)
+    } else {
+        res.status(403)
+        res.json({
+            "message": "Invalid coupon",
+            "status": 403
+        })
+    }
+}
+
 const avail_offer_controller = async (req, res, next) => {
     const restaurant_id = req.body["restaurant_id"]
     const offer_id = req.body["offer_code"]
@@ -116,5 +133,6 @@ module.exports = {
     unavail_offer_controller,
     check_offer_controller,
     get_restaurant_offers,
-    get_all_offers_controller
+    get_all_offers_controller,
+    check_offer__strict_controller
 }

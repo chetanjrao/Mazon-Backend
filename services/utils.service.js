@@ -1,9 +1,9 @@
-const Cuisines = require('../models/Cuisine')
-const City = require('../models/City')
-const Locality = require('../models/Locality')
-const Facility = require('../models/Facility')
-const PaymentMode = require('../models/PaymentMode')
-const Payment = require('../models/Payment')
+const Cuisines = require('../models/cuisine.model')
+const City = require('../models/city.model')
+const Locality = require('../models/locality.model')
+const Facility = require('../models/facility.model')
+const PaymentMode = require('../models/paymentmode.model')
+const Payment = require('../models/payment.model')
 
 const generate_unique_identifier = (count) => {
     var result = '';
@@ -18,6 +18,15 @@ const generate_unique_identifier = (count) => {
 const generate_otp = (count) => {
     var result = '';
     const characters = '0123456789';
+    const charactersLength = characters.length;
+    for ( var i = 0; i < count; i++ ) {
+       result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
+const generate_alphanumeric_otp = (count) => {
+    var result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const charactersLength = characters.length;
     for ( var i = 0; i < count; i++ ) {
        result += characters.charAt(Math.floor(Math.random() * charactersLength));
@@ -157,5 +166,6 @@ module.exports = {
     get_locality,
     create_payment_mode,
     create_payment,
-    get_payment_modes
+    get_payment_modes,
+    generate_alphanumeric_otp
 }

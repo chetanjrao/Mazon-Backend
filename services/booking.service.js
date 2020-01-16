@@ -1,10 +1,10 @@
-const Bookings = require("../models/Booking")
+const Bookings = require("../models/booking.model")
 const {
     generate_unique_identifier
 } = require("./utils.service")
-const BookingToken = require("../models/BookingToken")
+const Restaurants = require("../models/restaurant.model")
 
-const place_booking = async (rId, email, phone, otp, male, female, name, coupon, date, time, created_by, device) => {
+const place_booking = async (rId, email, phone, otp, male, female, name, coupon, date, time, created_by, device, remarks) => {
     console.log(device)
     const new_booking_document = new Bookings({
         rId: rId,
@@ -18,46 +18,11 @@ const place_booking = async (rId, email, phone, otp, male, female, name, coupon,
         device_id: [device],
         time: time,
         coupon: coupon,
-        created_by: created_by
+        created_by: created_by,
+        remarks: remarks
     })
     const new_booking = await new_booking_document.save()
     return new_booking
-}
-
-const create_booking_token = async (restaurant_id, user, ip) => {
-    const token = generate_unique_identifier(10)
-    const now = new Date()
-    now.setHours(now.getHours() + 12)
-    const expiry = new Date(now)
-    const new_token_document = new BookingToken({
-        user: user,
-        token: token,
-        expiry: expiry,
-        restaurant_id: restaurant_id,
-        ip: ip
-    })
-    const new_token = await new_token_document.save()
-    return new_token
-}
-
-const get_booking_token = async (token, user, restuarant_id) => {
-    return await BookingToken.findOne({
-        "token": token,
-        "user": user,
-        "restaurant_id": restuarant_id
-    })
-}
-
-const validate_booking_token = async (token, user, restuarant_id) => {
-    const user_token = await get_booking_token(token, user, restuarant_id)
-    if(user_token["_id"] != undefined){
-        const now = new Date()
-        const expiry = user_token["expiry"]
-        if(now < expiry){
-            return true
-        }
-    }
-    return false
 }
 
 const get_booking_on_reference = async (id) => {
@@ -85,6 +50,20 @@ const get_bookings_with_email = async (email) => {
         "email": email
     })
     return bookings
+}
+
+const get_bookings_with_email_base = async (email) => {
+    const bookings = await Bookings.find({
+        "email": email
+    }, {
+        "__v": 0,
+        "device_id": 0,
+        "last_updated_by": 0
+    })
+    return Restaurants.populate(bookings, {
+        path: "rId",
+        select: "name"
+    })
 }
 
 const get_bookings_with_restaurant = async (restaurant) => {
@@ -115,9 +94,8 @@ module.exports = {
     place_booking,
     edit_status,
     finish_booking,
-    validate_booking_token,
-    create_booking_token,
     get_booking_on_reference,
     get_bookings_with_email,
+    get_bookings_with_email_base,
     get_bookings_with_restaurant
 }

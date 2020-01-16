@@ -1,3 +1,14 @@
-var scopes = {
-    
+module.exports = {
+    "LOGIN_ERROR": 1,
+    "REGISTRATION_ERROR": 2,
+    "TOKEN_MISSING": 3,
+    "SCOPE_MISSING": 4,
+    "INVALID_SCOPE": 5,
+    "TOKENS_EXPIRED": 6,
+    "DOCUMENT_EXISTS": 7,
+    "HEADER_MISSING": 8,
+    "INSUFFICIENT_PARAMETERS": 9,
+    "INVALID PASSWORD": 10,
+    "DOCUMENT_NOT_FOUND": 11,
+    "SERVER_GONE_OUT": 12,
 }

@@ -5,10 +5,7 @@
  * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
 //const mongoose = require('mongoose')
-const {
-    resources
-} = require('../helpers/dbHelper')
-const Restaurants = require('../models/Restaurant')
+const Restaurants = require('../models/restaurant.model')
 const {
     get_inorders_with_restaurant
 } = require('../services/inorder.service')
@@ -23,6 +20,13 @@ const {
     get_destination_rating_review,
     get_final_rating
 } = require('../services/ratings.service')
+const {
+    get_facility,
+    get_cuisine
+} = require('../services/utils.service')
+const {
+    get_popular_food_of_restaurant
+} = require('../services/menu.service')
 
 const add_restaurant_controller = async (req, res, next) => {
     const name = req.body["name"]
@@ -71,13 +75,29 @@ module.exports = {
     },
     restaurant: async (req, res, next) => {
         const restaurantID = req.params.restaurantID
-        const restaurant = await Restaurants.findOne({'_id': restaurantID})
+        var restaurant = await Restaurants.findOne({'_id': restaurantID})
+        var restaurant_facilities = restaurant["facilities"]
+        var restaurant_cuisines = restaurant["cuisines"]
+        var current_facilites = []
+        for(var i=0;i<restaurant_facilities.length;i++){
+            var facility = await get_facility(restaurant_facilities[i])
+            current_facilites.push(facility["name"])
+        }
+        restaurant["facilities"] = current_facilites
+        var current_cuisines = []
+        for(var i=0;i<restaurant_cuisines.length;i++){
+            var cuisine = await get_cuisine(restaurant_cuisines[i])
+            current_cuisines.push(cuisine["name"])
+        }
+        restaurant["cuisines"] = current_cuisines
+        const best_sellers = await get_popular_food_of_restaurant(restaurant["_id"])
         const ratings_data = await get_final_rating(restaurantID)
         const ratings_full = await get_destination_rating_review(restaurantID)
         res.json({
             restaurant,
             ratings_data,
-            ratings_full
+            ratings_full,
+            best_sellers
         })
     },
     inorders: async (req, res, next) => {

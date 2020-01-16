@@ -1,94 +1,121 @@
 /*
- * Created on Wed Sep 25 2019
+ * Created on Wed Jan 15 2020
  *
- * Author - Chethan Jagannatha Kulkarni, CTO, Mazon Services Pvt. Ltd. 
- * Copyright (c) 2019 Mazon Services Pvt. Ltd.
+ * Author - Chethan Jagannatha Kulkarni, Director, CoFounder, CTO, Mazon Technologies Pvt. Ltd. 
+ * Copyright (c) 2020 Mazon Technologies Pvt. Ltd.
  */
 
-const mongoose = require('mongoose')
-const Restaurants = require('../models/Restaurant')
-const Cuisines = require('../models/Cuisine')
-const Menu = require('../models/Menu')
-const FoodTypes = require('../models/FoodType')
-const Ingredients = require('../models/Ingredient')
-
-const check_restaurant = async (restaurantID) => {
-    const restaurant = await Restaurants.findOne({ "_id": restaurantID})
-    return restaurant
-}
+const Restaurants = require('../models/restaurant.model')
+const Menu = require('../models/menu.model')
+const RatingReview = require('../models/ratingreview.model')
+const User = require('../models/user.model')
+const Dish  = require('../models/dish.model')
+const Category = require('../models/category.model')
+const {
+    get_suggested_restaurant
+} = require('./suggestions.service')
 
 const get_restaurant = async (restaurantID) => {
     const restaurant = await Restaurants.findOne({ "_id": restaurantID})
     return restaurant
 }
 
-const get_restaurant_owner_details = async (restaurant_id) => {
-    const restaurant = await Restaurants.findOne({ "_id": restaurant_id})
-    return restaurant
+const get_restaurant_menu = async (restaurantID) => {
+    const suggested_restaurant = await get_suggested_restaurant(restaurantID)
+    const restaurant_menu = await Menu.aggregate([
+        {
+            $match: {
+                rId: suggested_restaurant,
+                isAvailable: true
+            }
+        },
+        {
+            $group: {
+                "_id": {
+                    "cId": "$cId"
+                },
+                "items": {
+                    "$push": {
+                        "id": "$_id",
+                        "name": "$name",
+                        "dish_id": "$dish_id",
+                        "category": "$category",
+                        "sub_category": "$sub_category",
+                        "price": "$price",
+                        "isFeatured": "$isFeatured",
+                        "inorder": {
+                            "$size": "$inorders"
+                        },
+                        "images": "$images"
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                "_id": null,
+                "cId": "$_id.cId",
+                "items": "$items"
+            }
+        }
+    ])
+    const dish_populated_menu = await Dish.populate(restaurant_menu, {
+        "path": "items.dish_id",
+        "select": "name isVeg description"
+    })
+    const category_populated_menu = await  Category.populate(dish_populated_menu, {
+        "path":"cId",
+        "select": "name"
+    })
+    return category_populated_menu
 }
 
-const utilities = async (restaurant_id) => {
-    const cuisines = await Cuisines.find({}, {"created_at": 0, "created_by": 0})
-    const foodTypes = await FoodTypes.find({})
-    const ingredients = await Ingredients.find({})
-    const menu = await Menu.findOne({
-        "rId": restaurant_id
+const get_restaurant_rating = async (restaurantID) => {
+    const rating_reviews = await RatingReview.find({
+        "review_dest": restaurantID
     })
-    const final_catgories = []
-    for(var i=0;i<menu["menu"].length;i++){
-        final_catgories.push({
-            "category": menu["menu"][i]["category"],
-            "index": i
-        })
-    }
+    const populated_ratings = await User.populate(rating_reviews, {
+        "path": "user",
+        "select": "name"
+    })
+    const overall_rating_reviews = await RatingReview.aggregate([
+        {
+            $match: {
+                "review_dest": restaurantID
+            },
+        },
+        {
+            $group: {
+            _id: null,
+            total: {
+                $sum: 1
+            },
+            rating: {
+                $avg: "$rating",
+            },
+            ambience: {
+                $avg: "$apetite"
+            },
+            hygine: {
+                $avg: "$satisfaction"
+            }
+        } }, {
+        $project: {
+            _id: 0,
+            "rating": "$rating",
+            "ambience": "$ambience",
+            "hygine": "$hygine",
+            "total": "$total"
+        }
+    }])
     return {
-        "cusines": cuisines,
-        "categories": final_catgories,
-        "foodTypes": foodTypes,
-        "ingredients": ingredients
+        "summary": overall_rating_reviews,
+        "rating_reviews": populated_ratings
     }
-}
-
-const add_restaurant = async (name, city, locality, state, pincode, address, isDeliveryAvailable, bookingAvailable, images, priceForTwo, latitude, longitude, primary_contact, alternate_contact='', foodType, restaurantEmail, open_time, close_time, offers, noOfTables, cuisines, description, facilities, created_by, payment) => {
-    const restaurant_document = new Restaurants({
-        name: name,
-        city: city,
-        locality: locality,
-        state: state,
-        pincode: pincode,
-        address: address,
-        isDeliveryAvailable: isDeliveryAvailable,
-        bookingAvailable: bookingAvailable,
-        images: images, 
-        priceForTwo: priceForTwo,
-        coordinates: {
-            latitude: latitude,
-            longitude: longitude
-        },
-        primary_contact: primary_contact,
-        alternate_contact: alternate_contact,
-        foodType: foodType,
-        description: description,
-        restaurantEmail: restaurantEmail,
-        noOfTables: noOfTables,
-        cuisines: cuisines,
-        facilities: facilities,
-        timing: {
-            openTime: open_time,
-            closeTime: close_time
-        },
-        offers: offers,
-        created_by: created_by,
-        payment: payment
-    })
-    const new_restaurant = await restaurant_document.save()
-    return new_restaurant
 }
 
 module.exports = {
-    check_restaurant,
-    get_restaurant_owner_details,
     get_restaurant,
-    add_restaurant,
-    utilities
+    get_restaurant_menu,
+    get_restaurant_rating
 }

@@ -38,6 +38,12 @@ const {
     booking_activate_payload,
     booking_finish_payload
 } = require('../services/payload.service')
+const {
+    get_partners
+} = require('../services/partner.service')
+const {
+    get_user
+} = require('../services/user.service')
 
 const create_booking_controller = async (req, res, next) => {
     const rId = req.body["rId"]
@@ -52,11 +58,21 @@ const create_booking_controller = async (req, res, next) => {
     const time = req.body["time"]
     const user_id = res.locals["user_id"]
     const device_id = req.body["device_id"]
-    const booking = await place_booking(rId, email, phone, otp, male, female, name, coupon, date, time, user_id, device_id)
+    const remarks = req.body["remarks"]
+    const booking = await place_booking(rId, email, phone, otp, male, female, name, coupon, date, time, user_id, device_id, remarks)
     const analytics_document = add_analytics(rId, "bookings", user_id)
-    sendNotificationToDevice(device_id, booking_payload("", name, otp.toString()))
+    var devices = []
+    const restaurant_manager = await get_partners(rId)
+    for(var i=0;i<restaurant_manager.length;i++){
+        var user_details = await get_user(restaurant_manager[i]["user"])
+        for(var j=0;j<user_details["device_id"].length;j++){
+            devices.push(user_details["device_id"][j])
+        }
+    }
+    sendNotificationToDevice(devices, booking_payload("Manager", name, otp.toString()))
     if(booking["_id"] != undefined){
         res.json({
+            "reference": booking["_id"],
             "message": "Booking placed",
             "status": 200
         })

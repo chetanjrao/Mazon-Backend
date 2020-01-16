@@ -43,6 +43,9 @@ const {
 const {
     get_offer_details
 } = require('../services/offer.service')
+const {
+    get_wallet_based_user
+} = require('../services/wallet.service')
 
 const calculate_menu_amount = async (req, res, next) => {
     const restaurant_id = req.params["restaurant_id"]
@@ -144,6 +147,76 @@ const get_order_summary = async (req, res, next) => {
     })
 }
 
+const get_order_amount = async (req, res, next) => {
+    const inorder_token = req.headers["x-mazon-token"]
+    const user = req.body["email"]
+    const user_id = res.locals["user_id"]
+    const strict = req.body["strict"]
+    const token_document = await get_token_details(inorder_token, user)
+    const inorder_check = await get_order_using_token(inorder_token, strict)
+    var offer_amount = 0;
+    const offer_applied = token_document["offer_code"]
+    var total_amount = 0;
+    const wallet_document = await get_wallet_based_user(user_id)
+    const wallet_points = wallet_document["wallet_points"]
+    var resName;
+    var cusName;
+    var cusMobile;
+    var cusEmail;
+    if(inorder_check.length > 0){
+        for(var i=0;i<inorder_check.length;i++){
+            const current_restaurant = inorder_check[i]["rId"]
+            const items = inorder_check[i]["menu"]
+            const current_inorder_details = await get_overall_details(current_restaurant, items)
+            const order_id = inorder_check[i]["_id"]
+            const placed_at = inorder_check[i]["order_date_time"]
+            const restaurant_name = await get_restaurant(inorder_check[i]["rId"])
+            resName = restaurant_name;
+            cusName = inorder_check[i]["name"]
+            cusMobile = inorder_check[i]["phone"]
+            cusEmail = inorder_check[i]["email"]
+            const price = await calculate_amount(current_restaurant, items)
+            total_amount += price;
+        }
+    }
+    if(offer_applied.length > 0){
+        const offer = await get_offer_details(offer_applied)
+        if(total_amount > offer["min_amount"]){
+            if(offer["is_discount"]["is_percent"]){
+                var discount_amount = total_amount * offer["is_discount"]["discount_amount"] / 100
+                if(discount_amount > offer["is_discount"]["max"]){
+                    offer_amount = offer["is_discount"]["max"]
+                } else {
+                    offer_amount = discount_amount
+                }
+            } else {
+                offer_amount = offer["is_discount"]["discount_amount"];
+            }
+        }
+    }
+    var final_amount = total_amount - offer_amount
+    var wallet_deduction_limit = 30 * final_amount / 100;
+    var wallet_final_deduction = 0;
+    if(wallet_points <= wallet_deduction_limit){
+        wallet_final_deduction = wallet_points
+    } else {
+        wallet_final_deduction = Math.floor(wallet_deduction_limit)
+    }
+    res.json({
+        "total": total_amount,
+        "offer_applied": offer_applied,
+        "wallet_points": wallet_points,
+        "wallet_redeemable_limit": wallet_final_deduction,
+        "amount_final": final_amount - wallet_final_deduction,
+        "offer_amount": offer_amount,
+        "final_price": final_amount,
+        "customer_name": cusName,
+        "customer_mobile": cusMobile,
+        "customer_email": cusEmail,
+        "restaurant_name": resName["name"]
+    })
+}
+
 const check_inorder_validity = async (req, res, next) => {
     const email = req.body["email"]
     const inorder = await get_active_inorder_with_email(email)
@@ -152,6 +225,7 @@ const check_inorder_validity = async (req, res, next) => {
         res.json({
             "message": "Inorder already present",
             "reference": inorder["_id"],
+            "offer_applied" : inorder["offer_code"] == null ? "" : inorder["offer_code"] ,
             "token": inorder["order_token"],
             "status": 403
         })
@@ -420,5 +494,6 @@ module.exports = {
     "check_order": check_inorder_validity,
     "get_order_summary": get_order_summary,
     "get_weekly_analytics": get_weekly_inorders_data,
-    "waiter_token_validation": validate_waiter_inorder_token_controller
+    "waiter_token_validation": validate_waiter_inorder_token_controller,
+    get_order_amount
 }
