@@ -18,11 +18,11 @@ var restaurantSchema = new Schema({
         trim: true,
     },
     city: {
-        type: Number,
+        type: String,
         required: true
     },
     locality: {
-        type: Number,
+        type: String,
         required: true
     },
     state: {
@@ -60,10 +60,6 @@ var restaurantSchema = new Schema({
         default: false,
         required: true
     },
-    popularity: {
-        type: Number,
-        default: 10
-    },
     images: {
         type: [String],
         required: true
@@ -72,14 +68,14 @@ var restaurantSchema = new Schema({
         type: Number,
         required: true
     },
-    coordinates: {
-        latitude: {
-            type: Number,
-            required: true
+    location: {
+        type: {
+            type: String,
+            default: "Point"
         },
-        longitude: {
-            type: Number,
-            required: true
+        coordinates: {
+            type: [Number],
+            default: [] //Long, Lat
         }
     },
     primary_contact: {
@@ -104,7 +100,7 @@ var restaurantSchema = new Schema({
             required: true
         }
     },
-    payment: {
+    payment: [{
         payment_mode: {
             payment_id: {
                 type: String
@@ -119,7 +115,7 @@ var restaurantSchema = new Schema({
                 type: String
             }
         },
-    },
+    }],
     description: {
         type: String,
         required: true

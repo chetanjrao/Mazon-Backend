@@ -15,7 +15,18 @@ const emailTransporter = nodeMailer.createTransport({
         pass: process.env.MAIL_PASS
     }
 })
+const multer = require("multer")
+const crypto = require("crypto")
+var storage = multer.diskStorage({
+    destination: './public/images/food',
+    filename: function (req, file, cb) {
+        var filemimeType = file.mimetype.split("/")[1]
+        var fileName = crypto.randomBytes(14).toString("hex")
+        cb(null, fileName + '_' + Date.now() + `.${filemimeType}`)
+    }
+})
 
 module.exports = {
-    "mailer": emailTransporter
+    "mailer": emailTransporter,
+    "storage": storage
 }

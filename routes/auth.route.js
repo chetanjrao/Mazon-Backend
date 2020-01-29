@@ -6,13 +6,15 @@
 const express = require("express")
 const router = express.Router()
 const {
-    validateotp,
+    verifyotp,
     signup,
-    sendotp
+    sendotp,
+    token
 } = require("../controllers/user.controller")
 
-router.route("/signup").post(signup)
-router.route("/process/signin").post(sendotp)
-router.route("/process/validate").post(validateotp)
+router.route("/signin/verify").post(verifyotp)
+router.route("/signin/process").post(sendotp)
+router.route("/signup/process").post(signup)
+router.route("/oauth/token").post(token)
 
 module.exports = router

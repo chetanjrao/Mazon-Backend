@@ -4,13 +4,8 @@
  * Author - Chethan Jagannatha Kulkarni, CTO, Mazon Services Pvt. Ltd. 
  * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
-
-const mongoose = require('mongoose')
 const {
-    resources
-} = require('../helpers/dbHelper')
-const {
-    getRestaurantMenu,
+    get_restuarant_menu,
     get_featured_food_of_restaurant,
     get_specific_food_details,
     enable_featuring,
@@ -18,12 +13,12 @@ const {
     disable_featuring,
     disable_item
 } = require('../services/menu.service')
-const Menu = require('../models/Menu')
+const Menu = require('../models/menu.model')
 
 module.exports = {
     getRestaurantMenu: async (req, res, next) => {
         const restaurant_id = req.params["restaurantID"]
-        const restaurantMenu = await getRestaurantMenu(restaurant_id)
+        const restaurantMenu = await get_restuarant_menu(restaurant_id)
         res.json(restaurantMenu)
     },
     getFoodDetails: async (req, res, next) => {

@@ -11,34 +11,32 @@ const DishSchema = new mongoose.Schema({
     },
     ingredients: {
         type: [String],
+        default: []
     },
     cuisines: {
-        type: [String]
+        type: [String],
+        default: []
+    },
+    images: {
+        type: [String],
+        default: []
     },
     reciepes: {
-        type: [String]
+        type: [String],
+        default: []
     },
     categories: {
-        type: [String]
+        type: [String],
+        default: []
     },
     description: {
-        type: String,
-        required: true
+        type: String
     },
     saves: {
         type: [String],
         default: []
     },
     shares: [String],
-    taste: {
-        spicy: Number, //Range 0-3
-        bitter: Number,
-        sweet: Number,
-        sour: Number,
-        salty: Number,
-        astringent: Number,
-        umami: Number
-    },
     slug: String,
     calories: Number, //in Kcal
     isVeg: {

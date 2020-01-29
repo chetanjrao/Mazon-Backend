@@ -9,7 +9,7 @@ const {
 const {
     get_restaurant_owner_details
 } = require('./restaurant.service')
-const Inorders = require('../models/Inorder')
+const Inorders = require('../models/inorder.model')
 const crypto = require('crypto')
 
 const RESTRICTED_PROJECTIONS = {

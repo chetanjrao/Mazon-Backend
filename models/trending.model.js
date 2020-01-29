@@ -16,10 +16,6 @@ const TrendingSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    is_reference: {
-        type: Boolean,
-        default: true
-    },
     location: {
         type: {
             type: String,

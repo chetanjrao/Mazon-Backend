@@ -1,7 +1,5 @@
-const mongoose = require('mongoose')
 const Inorder = require('../models/inorder.model')
 const {
-    getFoodDetails,
     get_particular_food_details,
     update_inorder_content
 } = require('./menu.service')
@@ -30,6 +28,7 @@ const {
 } = require('../services/partner.service')
 const Restaurants = require('../models/restaurant.model')
 const Users = require('../models/user.model')
+const Dish = require('../models/dish.model')
 
 const create_inorder_token = async (restaurant_id, table_no, offer_code="", user, ip, created_by) => {
     var token = generate_unique_identifier(24)
@@ -59,8 +58,9 @@ const create_inorder_token = async (restaurant_id, table_no, offer_code="", user
     return new_token
 }
 
-const get_inorder_token = async (user, restuarant_id) => {
+const get_inorder_token = async (token, user, restuarant_id) => {
     return await InorderToken.findOne({
+        "token": token,
         "user": user,
         "restaurant_id": restuarant_id
     })
@@ -111,8 +111,9 @@ const get_inorders_specific = async (restaurant_id, status) => {
 }
 
 const validate_inorder_token = async (token, user, restuarant_id) => {
+    console.log(restuarant_id)
     const user_token = await get_inorder_token(token, user, restuarant_id)
-    if(user_token["_id"] != undefined){
+    if(user_token != null){
         const now = new Date()
         const expiry = user_token["expiry"]
         if(now < expiry){
@@ -218,7 +219,7 @@ const place_inorder = async (user, device_id, restaurant_id, table_no, menu, ord
     })
     const new_inorder = await inorder_query.save()
     for(var i=0; i < menu.length; i++){
-        await update_inorder_content(restaurant_id, new_inorder["_id"], menu[i].cId, menu[i].fId)
+        await update_inorder_content(new_inorder["_id"], menu[i].fId)
     }
     const partner = await get_partners(restaurant_id)
     const restaurant = await get_restaurant(restaurant_id)
@@ -354,10 +355,11 @@ const get_final_price = async (order_id) => {
     const calculated_amount = await calculate_amount(inorder["r_id"], inorder["items"])
 }
 
-const calculate_amount = async (restaurant_id, items) => {
+const calculate_amount = async (items) => {
+    console.log(items)
     var amount = 0
     for(var i=0; i<items.length;i++){
-        var food = await get_particular_food_details(restaurant_id, items[i]["cId"], items[i]["fId"])
+        var food = await get_particular_food_details(items[i]["fId"])
         var price = items[i]["isHalf"] && food["halfPrice"] != undefined ? food["halfPrice"] : food["price"]
         var food_amount = Number.parseFloat(price) * Number.parseFloat(items[i]['quantity'])
         amount += Number.parseFloat(food_amount)
@@ -365,7 +367,7 @@ const calculate_amount = async (restaurant_id, items) => {
     return amount
 }
 
-const get_overall_details = async (restaurant_id, items) => {
+const get_overall_details = async (items) => {
     var amount = 0
     var response = []
     for(var i=0; i<items.length;i++){
@@ -375,9 +377,12 @@ const get_overall_details = async (restaurant_id, items) => {
             "quantity": "",
             "food_id": ""
         }
-        var food = await get_particular_food_details(restaurant_id, items[i]["cId"], items[i]["fId"])
-        details["name"] = food["fName"]
-        details["food_id"] = food["_id"]
+        var food = await get_particular_food_details(items[i]["fId"])
+        const dish = await Dish.findOne({
+            "_id": food["dish_id"]
+        })
+        details["name"] = dish["name"]
+        details["food_id"] = food["dish_id"]
         var price = items[i]["isHalf"] && food["halfPrice"] != undefined ? food["halfPrice"] : food["price"]
         details["price"] = price
         var food_amount = Number.parseFloat(price) * Number.parseFloat(items[i]['quantity'])

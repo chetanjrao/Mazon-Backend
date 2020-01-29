@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const RatingReviews = require('../models/ratingreview.model')
+const FoodRating = require('../models/foodrating.model')
 const Restaurant = require('../models/restaurant.model')
 const {
     check_restaurant
@@ -45,11 +46,11 @@ const getRestaurantRatingReviews = async (restaurantID) => {
     }
 }
 
-const post_rating_review = async (destination, type, rating, reference, review, user, apetite, satisfaction, email) => {
-    const new_rating = new RatingReviews({
+const post_rating_review = async (dish_id, restaurant_id, rating, reference, review, user, apetite, satisfaction, email) => {
+    const new_rating = new FoodRating({
         user: user,
-        reviewDest: destination,
-        type: type,
+        dish_id: dish_id,
+        restaurant_id: restaurant_id,
         email: email,
         reference: reference,
         rating: rating,

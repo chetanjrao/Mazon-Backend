@@ -1,6 +1,6 @@
 const Suggestion = require('../models/suggestion.model')
 
-const create_suggestion = async (name, latitude, longitude, contact, created_by) => {
+const create_suggestion = async (name, latitude, longitude, contact, created_by, address) => {
     const new_suggestion_document = new Suggestion({
         name: name,
         location: {
@@ -8,7 +8,8 @@ const create_suggestion = async (name, latitude, longitude, contact, created_by)
             longitude: longitude
         },
         contact: contact,
-        created_by: created_by
+        created_by: created_by,
+        address: address
     })
     const new_suggestion = await new_suggestion_document.save()
     return new_suggestion

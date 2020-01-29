@@ -12,36 +12,7 @@ const AccessToken = new mongoose.Schema({
         type: Date,
         required: true
     },
-    client_id: {
-        type: String,
-        required: true
-    },
-    grant_type: {
-        type: String,
-        required: true
-    },
-    grant_value: {
-        type: String,
-        required: true
-    },
-    scopes: {
-        type: [String],
-        required: true,
-        default: []
-    },
-    project_id: {
-        type: String,
-        required: true
-    },
     user: {
-        type: String,
-        required: true
-    },
-    client_type:{
-        type: Number,
-        required: true
-    },
-    token_type: {
         type: String,
         required: true
     },

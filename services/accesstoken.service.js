@@ -1,7 +1,7 @@
 const AccessToken = require('../models/accesstoken.model')
 const crypto = require('crypto')
 
-const create_accesstoken = async (client_id, grant_type, grant_value, scopes, project_id, user, client_type, token_type, user_agent, ip) => {
+const create_accesstoken = async (user, user_agent, ip) => {
     const access_token = crypto.randomBytes(24).toString('hex')
     const now = new Date()
     now.setDate(now.getDate() + 60)
@@ -9,14 +9,9 @@ const create_accesstoken = async (client_id, grant_type, grant_value, scopes, pr
     const new_access_token_document = new AccessToken({
         access_token: access_token,
         expiry: expiry,
-        client_id: client_id,
-        grant_type: grant_type,
-        grant_value: grant_value,
-        scopes: scopes,
-        project_id: project_id,
         user: user,
-        client_type: client_type,
-        token_type: token_type,
+        client_type: "app",
+        token_type: "bearer",
         user_agent: user_agent,
         ip: ip
     })
@@ -25,14 +20,14 @@ const create_accesstoken = async (client_id, grant_type, grant_value, scopes, pr
 }
 
 const validate_accesstoken = async (access_token, user) => {
-    const access_token = await AccessToken.findOne({
+    const access_token_document = await AccessToken.findOne({
         "access_token": access_token,
         "user": user,
         "is_revoked.is_revoked": false
     }).sort({ "created_at": -1 })
-    if(access_token == null){
+    if(access_token_document != null){
         const now = new Date()
-        if(now < access_token["expiry"]){
+        if(now < access_token_document["expiry"]){
             return true
         }
         return false

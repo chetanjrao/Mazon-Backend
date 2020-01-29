@@ -22,6 +22,10 @@ const OTPSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
+    is_valid: {
+        type: Boolean,
+        default: true
+    },
     created_at: {
         type: Date,
         default: new Date()

@@ -11,18 +11,18 @@ const {
     http
 } = require('./helpers/root.helper')
 const publicDirectory = require('path').join(__dirname, 'public');
-app.use(express.static(publicDirectory))
-console.log(publicDirectory)
+app.use("/public", express.static(publicDirectory))
+//console.log(publicDirectory)
 let bodyparser = require('body-parser')
-const formData = require('express-form-data')
-const options = {
-    uploadDir: publicDirectory,
-    autoClean: true
-  };
-app.use(formData.parse(options));
-app.use(formData.format());
-app.use(formData.stream());
-app.use(formData.union());
+// const formData = require('express-form-data')
+// const options = {
+//     uploadDir: publicDirectory,
+//     autoClean: true
+//   };x
+// app.use(formData.parse(options));
+// app.use(formData.format());
+// app.use(formData.stream());
+// app.use(formData.union());
 app.use(bodyparser.urlencoded({
     extended: true
 }))

@@ -11,10 +11,10 @@ const {
 const {
     check_restaurant
 } = require('../services/restaurant.service')
-const AccessToken = require('../models/AccessToken')
-const RefreshToken = require('../models/RefreshToken')
+const AccessToken = require('../models/accesstoken.model')
+const RefreshToken = require('../models/refreshtoken.model')
 const bcrypt = require('bcrypt')
-const Users = require('../models/User')
+const Users = require('../models/user.model')
 const {
     get_user_details_by_email_or_mobile,
     create_mobile_otp,

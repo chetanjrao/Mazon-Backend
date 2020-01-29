@@ -16,20 +16,20 @@ const SuggestionSchema = new mongoose.Schema({
         type: String
     },
     location: {
-        latitude: {
+        type: {
             type: String,
-            required: true
+            default: "Point"
         },
-        longitude: {
-            type: String,
-            required: true
-        }
+        coordinates: [Number]
     },
     contact: {
+        type: String
+    },
+    created_by: {
         type: String,
         required: true
     },
-    created_by: {
+    address: {
         type: String,
         required: true
     },

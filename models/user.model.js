@@ -18,16 +18,7 @@ const User = new mongoose.Schema({
     password: {
         type: String,
     },
-    offers_availed: [
-        {
-            offer_code: {
-                type: String
-            },
-            availed_at: {
-                type: Date
-            }
-        }
-    ],
+    offers_availed: [String],
     mobile: {
         type: String,
         required: true

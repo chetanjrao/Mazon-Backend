@@ -14,6 +14,7 @@
   "dependencies": {
     "bcrypt": "^3.0.6",
     "body-parser": "^1.18.3",
+    "creditcard-generator": "0.0.7",
     "dotenv": "^8.2.0",
     "email-templates": "^6.1.1",
     "express": "^4.16.4",
@@ -24,14 +25,24 @@
     "jsonwebtoken": "^8.5.1",
     "mongo-sanitize": "^1.0.1",
     "mongoose": "^5.8.7",
+    "msg91": "0.0.6",
+    "msg91-node-v2": "^1.0.0",
     "multer": "^1.4.1",
     "nodemailer": "^6.2.1",
+    "nodemailer-express-handlebars": "^3.1.0",
     "pug": "^2.0.4",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
+    "browser-sync": "^2.26.7",
     "eslint": "^6.7.2",
     "eslint-config-google": "^0.14.0",
+    "gulp": "^4.0.2",
+    "gulp-inline-css": "^3.4.0",
+    "gulp-pug": "^4.0.1",
+    "gulp-rename": "^2.0.0",
+    "gulp-replace": "^1.0.0",
+    "gulp-sass": "^4.0.2",
     "nodemon": "^1.18.10"
   }
 }

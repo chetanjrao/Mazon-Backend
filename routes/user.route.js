@@ -1,29 +1,30 @@
 /*
- *   Copyright (c) 2019 
- *   All rights reserved.
+ * Created on Fri Jan 17 2020
+ *
+ * Author - Chethan Jagannatha Kulkarni, Director, CoFounder, CTO, Mazon Technologies Pvt. Ltd. 
+ * Copyright (c) 2020 Mazon Technologies Pvt. Ltd.
  */
 
 const express = require("express")
 const router = express.Router()
 const {
-    signin,
-    signup,
-    token_middleware,
-    get_profile,
-    get_full_profile,
-    get_wallet,
-    sendotp
+    validate_token,
+    check_offer,
+    check_mobile,
+    send_otp_mobile,
+    verify_mobile,
+    create_trending_con,
+    profile,
+    wallet
 } = require("../controllers/user.controller")
-const {
-    check_offer__strict_controller
-} = require('../controllers/offer.controller')
 
-router.route("/signin").post(signin)
-router.route("/process/signin").post(sendotp)
-router.route("/signup").post(signup)
-// router.use(token_middleware).route("/details").post(get_profile)
-// router.route("/profile").post(get_full_profile)
-// router.route("/wallet").post(get_wallet)
-// router.route("/:restaurantID/check-offer").post(check_offer__strict_controller)
+router.use(validate_token)
+router.route("/check-offer").get(check_offer)
+router.route('/mobile/check').post(check_mobile)
+router.route("/mobile/process").post(send_otp_mobile)
+router.route("/mobile/verify").post(verify_mobile)
+router.route("/trending/create").post(create_trending_con)
+router.route("/profile").post(profile)
+router.route("/wallet").get(wallet)
 
 module.exports = router

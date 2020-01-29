@@ -1,7 +1,7 @@
 const RefreshToken = require('../models/refreshtoken.model')
 const crypto = require('crypto')
 
-const create_refreshtoken = async (client_id, grant_type, grant_value, scopes, project_id, user, client_type, token_type, user_agent, ip) => {
+const create_refreshtoken = async (user, user_agent, ip) => {
     const refresh_token = crypto.randomBytes(24).toString('hex')
     const now = new Date()
     now.setDate(now.getDate() + 60)
@@ -9,14 +9,9 @@ const create_refreshtoken = async (client_id, grant_type, grant_value, scopes, p
     const new_refresh_token_document = new RefreshToken({
         refresh_token: refresh_token,
         expiry: expiry,
-        client_id: client_id,
-        grant_type: grant_type,
-        grant_value: grant_value,
-        scopes: scopes,
-        project_id: project_id,
         user: user,
-        client_type: client_type,
-        token_type: token_type,
+        client_type: "app",
+        token_type: "bearer",
         user_agent: user_agent,
         ip: ip
     })
@@ -25,14 +20,14 @@ const create_refreshtoken = async (client_id, grant_type, grant_value, scopes, p
 }
 
 const validate_refreshtoken = async (refresh_token, user) => {
-    const refresh_token = await RefreshToken.findOne({
+    const refresh_token_document = await RefreshToken.findOne({
         "refresh_token": refresh_token,
         "user": user,
         "is_revoked.is_revoked": false
     }).sort({ "created_at": -1 })
-    if(refresh_token == null){
+    if(refresh_token_document != null){
         const now = new Date()
-        if(now < refresh_token["expiry"]){
+        if(now < refresh_token_document["expiry"]){
             return true
         }
         return false

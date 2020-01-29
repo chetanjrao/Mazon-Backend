@@ -24,7 +24,8 @@ const create_passkey = async (user, grant_method, grant_value, ip, user_agent) =
 const validate_passkey = async (passkey, user) => {
     const passkey_document = await Passkey.findOne({
         "user": user,
-        "passkey": passkey
+        "passkey": passkey,
+        "is_valid": true
     }).sort({ "created_at": -1 })
     if(passkey_document != null){
         const expiry = passkey_document["expiry"]
@@ -37,7 +38,21 @@ const validate_passkey = async (passkey, user) => {
     return false
 }
 
+const invalidate_passkey = async (passkey, user) => {
+    const passkey_document = await Passkey.findOneAndUpdate({
+        "user": user,
+        "passkey": passkey,
+        "is_valid": true
+    }, {
+        $set: {
+            "is_valid": false
+        }
+    }).sort({ "created_at": -1 })
+    return passkey_document
+}
+
 module.exports = {
     create_passkey,
-    validate_passkey
+    validate_passkey,
+    invalidate_passkey
 }

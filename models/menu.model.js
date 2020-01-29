@@ -27,6 +27,15 @@ const MenuSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    taste: {
+        spicy: Number, //Range 0-3
+        bitter: Number,
+        sweet: Number,
+        sour: Number,
+        salty: Number,
+        astringent: Number,
+        umami: Number
+    },
     price: {
         type: Number,
         required: true
@@ -49,8 +58,7 @@ const MenuSchema = new mongoose.Schema({
     },
     created_at: {
         type: Date,
-        default: Date.now(),
-        required: true,
+        default: new Date(),
         select: false
     },
     created_by: {
@@ -64,7 +72,7 @@ const MenuSchema = new mongoose.Schema({
     },
     updated_at: {
         type: Date,
-        default: Date.now(),
+        default: new Date(),
         select: false
     }
 })

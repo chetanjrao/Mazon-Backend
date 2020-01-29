@@ -12,7 +12,7 @@ const {
     utilities
 } = require('../services/restaurant.service')
 const {
-    token_middleware
+    validate_token
 } = require('../controllers/user.controller')
 const {
     confirm_order,
@@ -43,10 +43,10 @@ router.route('/:restaurantID/utilities').get(async(req, res, next)=>{
     const _utilities = await utilities(restaurant_id)
     res.json(_utilities)
 })
-router.use(token_middleware).route('/profile')
+router.use(validate_token).route('/profile')
 router.route('/notifications')
 router.use(check_partner_middleware).route('/inorders/confirm').patch(confirm_order)
-router.use(check_partner_middleware).route('/inorders/cancel').patch(cancel_order)
+router.route('/inorders/cancel').patch(cancel_order)
 router.route('/inorders/activate').patch(serve_order)
 router.route('/inorders/summary').post(get_order_summary)
 router.route('/inorders/:restaurantID').post(restaurant_inorders)

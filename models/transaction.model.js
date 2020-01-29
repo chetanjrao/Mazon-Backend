@@ -12,7 +12,7 @@ const {
 } = require('../helpers/db.helper')
 
 const TransactionSchema = new Schema({
-    reference: {
+    wallet: {
         type: String,
         required: true
     },
@@ -21,6 +21,10 @@ const TransactionSchema = new Schema({
         required: true
     },
     message: {
+        type: String,
+        required: true
+    },
+    beneficiary: {
         type: String,
         required: true
     },
@@ -35,14 +39,6 @@ const TransactionSchema = new Schema({
     created_at: {
         type: Date,
         default: new Date()
-    },
-    coordinates: {
-        latitude: {
-            type: String
-        },
-        longitude: {
-            type: String
-        }
     },
     is_op_success: {
         type: Boolean

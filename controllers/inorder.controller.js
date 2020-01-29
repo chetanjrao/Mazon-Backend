@@ -50,7 +50,7 @@ const {
 const calculate_menu_amount = async (req, res, next) => {
     const restaurant_id = req.params["restaurant_id"]
     const menu = req.params["menu"]
-    const amount = await calculate_amount(restaurant_id, menu)
+    const amount = await calculate_amount( menu)
     res.send(amount)
 }
 
@@ -71,7 +71,7 @@ const place_inorder_controller = async (req, res, next) => {
         is_waiter_taking = true
     }
     const inorder = await place_inorder(user_id, device_id, restaurant_id, table_no, menu, order_token, offer_applied, name, phone, email, created_by, is_waiter_taking)
-    const final_amount = await calculate_amount(restaurant_id,  menu)
+    const final_amount = await calculate_amount( menu)
     const analytics_document = add_analytics(restaurant_id, "inorders", user_id)
     if(inorder != {} && inorder != undefined){
         res.json({
@@ -103,11 +103,11 @@ const get_order_summary = async (req, res, next) => {
         for(var i=0;i<inorder_check.length;i++){
             const current_restaurant = inorder_check[i]["rId"]
             const items = inorder_check[i]["menu"]
-            const current_inorder_details = await get_overall_details(current_restaurant, items)
+            const current_inorder_details = await get_overall_details(items)
             const order_id = inorder_check[i]["_id"]
             const placed_at = inorder_check[i]["order_date_time"]
             const restaurant_name = await get_restaurant(inorder_check[i]["rId"])
-            const price = await calculate_amount(current_restaurant, items)
+            const price = await calculate_amount(items)
             total_amount += price;
             response.push({
                 "restaurant_name": restaurant_name["name"],
@@ -167,7 +167,7 @@ const get_order_amount = async (req, res, next) => {
         for(var i=0;i<inorder_check.length;i++){
             const current_restaurant = inorder_check[i]["rId"]
             const items = inorder_check[i]["menu"]
-            const current_inorder_details = await get_overall_details(current_restaurant, items)
+            const current_inorder_details = await get_overall_details(items)
             const order_id = inorder_check[i]["_id"]
             const placed_at = inorder_check[i]["order_date_time"]
             const restaurant_name = await get_restaurant(inorder_check[i]["rId"])
@@ -175,7 +175,7 @@ const get_order_amount = async (req, res, next) => {
             cusName = inorder_check[i]["name"]
             cusMobile = inorder_check[i]["phone"]
             cusEmail = inorder_check[i]["email"]
-            const price = await calculate_amount(current_restaurant, items)
+            const price = await calculate_amount(items)
             total_amount += price;
         }
     }
@@ -405,7 +405,7 @@ const finish_inorder_controller = async (req, res, next) => {
 
 const generate_inorder_token = async (req, res, next) => {
     const restaurant_id = req.body["restaurant_id"]
-    const user = req.body["email"]
+    const user = res.locals["user"]
     const user_id = res.locals.user_id
     const table_no = req.body["table_no"]
     const offer_code = req.body["offer_code"]
@@ -430,10 +430,11 @@ const generate_inorder_token = async (req, res, next) => {
 const validate_inorder_token_controller = async (req, res, next) => {
     try {
         const token = req.headers["x-mazon-token"]
-        const user = req.body["email"]
+        const user = res.locals["user"]
         const restaurant_id = req.body["restaurant_id"]
+        console.log(restaurant_id)
         const user_document = await get_user_details_by_email(user)
-        if(user_document["email"] != undefined){
+        if(user_document != null){
             const token_document = await validate_inorder_token(token, user, restaurant_id)
             if(token_document){
                 res.locals["inorder-token"] = token

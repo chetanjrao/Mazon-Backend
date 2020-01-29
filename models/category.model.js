@@ -9,7 +9,7 @@ const CategorySchema = new mongoose.Schema({
         required: true
     },
     created_by: {
-        typ: String,
+        type: String,
         required: true
     },
     created_at: {

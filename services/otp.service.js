@@ -19,7 +19,8 @@ const validate_otp = async (grant_value, otp, scope) => {
     const otp_document = await OTP.findOne({
         "otp": otp,
         "grant_value": grant_value,
-        "scope": scope
+        "scope": scope,
+        "is_valid": true
     }).sort({ "created_at": -1 })
     if(otp_document != null){
         if(now < otp_document["expiry"]){
@@ -30,7 +31,23 @@ const validate_otp = async (grant_value, otp, scope) => {
     return false
 }
 
+const invalidate_otp = async (grant_value, otp, scope) => {
+    const otp_document = await OTP.findOne({
+        "otp": otp,
+        "grant_value": grant_value,
+        "scope": scope,
+        "is_valid": true
+    }).sort({ "created_at": -1 })
+    const updated_document = await otp_document.updateOne({
+        $set: {
+            is_valid: false
+        }
+    })
+    return updated_document
+}
+
 module.exports = {
     create_otp,
-    validate_otp
+    validate_otp,
+    invalidate_otp
 }

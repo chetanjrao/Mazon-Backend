@@ -14,7 +14,7 @@ const menu_controller = require('../controllers/menu.controller')
 const offer_controller = require('../controllers/offer.controller')
 const inorder_controller = require('../controllers/inorder.controller')
 const {
-    token_middleware
+    validate_token
 } = require('../controllers/user.controller')
 router.route('/').get(restaurantController.index)
 
@@ -38,7 +38,7 @@ router.route('/:restaurantID/offers').get(offer_controller.get_offers_controller
 
 router.route('/:restaurantID/menu/:foodID').get(menu_controller.getParticularFood)
 
-router.use(token_middleware).route('/:restaurantID/ratings/create').post(ratings_controller.post_rating);
+router.use(validate_token).route('/:restaurantID/ratings/create').post(ratings_controller.post_rating);
 
 
 module.exports = router

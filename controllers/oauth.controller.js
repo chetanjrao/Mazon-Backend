@@ -5,7 +5,7 @@
  * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
 
-const OauthClient = require('../models/OauthClient')
+const OauthClient = require('../models/oauthclient.model')
 const OauthAuthorization = require('../models/oauthauthorization.model')
 const Users = require('../models/user.model')
 const bcrypt = require('bcrypt')
@@ -206,46 +206,9 @@ module.exports = {
                         var expiry = code_docs_check["expires_in"]
                         const now = new Date()
                         if(now < expiry){
-                            const current_scopes = oauth_client_check["scopes"]
-                            var now_access = new Date()
-                            now_access.setDate(now_access.getDate() + 45)
-                            const access_token_expiry = new Date(now_access)
-                            const now_refresh = new Date()
-                            now_refresh.setDate(now_refresh.getDate() + 120)
-                            const refresh_token_expiry = new Date(now_refresh)
-                            const access_token = crypto.randomBytes(24).toString('hex')
-                            const refresh_token = crypto.randomBytes(24).toString('hex')
-                            const new_access_token = new AccessToken({
-                                access_token: access_token,
-                                expiry: access_token_expiry,
-                                client_id: client_id,
-                                grant_type: grant_type,
-                                grant_value: code,
-                                project_id: project_id,
-                                scopes: current_scopes,
-                                username: username,
-                                client_type: client_type,
-                                token_type: "bearer",
-                                user_agent: user_agent,
-                                user_ip: ip
-                            })
-                            const access_token_document = await new_access_token.save()
-                            const new_refresh_token = new RefreshToken({
-                                refresh_token: refresh_token,
-                                expiry: refresh_token_expiry,
-                                client_id: client_id,
-                                grant_type: grant_type,
-                                grant_value: code,
-                                project_id: project_id,
-                                scopes: current_scopes,
-                                username: username,
-                                client_type: client_type,
-                                token_type: "refresh",
-                                user_agent: user_agent,
-                                user_ip: ip
-                            })
-                            const refresh_token_document = await new_refresh_token.save()
-                            if((access_token_document["_id"] != undefined) && (refresh_token_document["_id"] != undefined)){
+                            const scopes = oauth_client_check["scopes"]
+                            const access_token_document = await create_accesstoken(client_id, grant_type, code, scopes, project_id, username, client_type, )                            
+                            if((access_token_document != null) && (refresh_token_document != null)){
                                 res.json({
                                     "scopes": current_scopes,
                                     "expiry": access_token_expiry,
