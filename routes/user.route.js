@@ -15,7 +15,12 @@ const {
     verify_mobile,
     create_trending_con,
     profile,
-    wallet
+    wallet,
+    report,
+    tier,
+    claim,
+    referral,
+    feedback
 } = require("../controllers/user.controller")
 
 router.use(validate_token)
@@ -26,5 +31,10 @@ router.route("/mobile/verify").post(verify_mobile)
 router.route("/trending/create").post(create_trending_con)
 router.route("/profile").post(profile)
 router.route("/wallet").get(wallet)
+router.route("/report").post(report)
+router.route("/tier").get(tier)
+router.route("/claim").post(claim)
+router.route("/feedback").post(feedback)
+router.route("/referral").post(referral)
 
 module.exports = router

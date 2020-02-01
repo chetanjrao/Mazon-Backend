@@ -64,7 +64,8 @@ router.route("/foods/filter").get(async (req, res, next)=>{
 router.route("/trending/foods").get(async (req, res, next)=>{
     const latitude = req.query["latitude"]
     const longitude = req.query["longitude"]
-    const trending_document = await get_trending(latitude, longitude)
+    const user = req.query["user"]
+    const trending_document = await get_trending(latitude, longitude, user)
     res.json(trending_document)
 })
 

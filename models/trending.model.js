@@ -26,6 +26,7 @@ const TrendingSchema = new mongoose.Schema({
             default: [] //Long, Lat
         }
     },
+    reports: [],
     created_by: {
         type: String
     },

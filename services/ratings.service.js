@@ -46,6 +46,7 @@ const getRestaurantRatingReviews = async (restaurantID) => {
     }
 }
 
+
 const post_rating_review = async (dish_id, restaurant_id, rating, reference, review, user, apetite, satisfaction, email) => {
     const new_rating = new FoodRating({
         user: user,

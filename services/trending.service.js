@@ -8,6 +8,7 @@ const {
     create_suggestion
 } = require('./suggestions.service')
 const Suggestion = require('../models/suggestion.model')
+const Report = require('../models/report.model')
 
 const create_trending = async (dish_id, latitude, rating, review, longitude, created_by, email, restaurant_id, contact, restaurant_name='', dish_name='', isVeg=true, images, address='')=>{
     let current_dish_id = dish_id
@@ -73,21 +74,46 @@ const create_trending = async (dish_id, latitude, rating, review, longitude, cre
         },
         created_by: created_by
     })
-    const new_food_rating_document = new FoodRating({
-        user: created_by,
-        email: email,
-        rating: rating,
-        review: review,
-        images: images,
-        dish_id: current_dish_id,
-        restaurant_id: current_restaurant_id
+    const now = new Date()
+    now.setDate(now.getDate() - 7)
+    const prev = new Date(now)
+    const current_recent_rating = await FoodRating.find({
+        $or: [
+            {   "dish_id": current_dish_id,
+                "restaurant_id": current_restaurant_id,
+                "created_at": {
+                    $lt: now
+                }
+            },
+            {
+                "dish_id": current_dish_id,
+                "restaurant_id": current_restaurant_id,
+                "created_at": {
+                    $gte: prev
+                }
+            }
+        ]
     })
-    await new_food_rating_document.save()
-    const new_trending = await new_trending_document.save()
-    return new_trending
+    console.log(current_recent_rating)
+    if(current_recent_rating.length == 0){
+        const new_food_rating_document = new FoodRating({
+            user: created_by,
+            email: email,
+            rating: rating,
+            review: review,
+            images: images,
+            dish_id: current_dish_id,
+            restaurant_id: current_restaurant_id
+        })
+        await new_food_rating_document.save()
+        const new_trending = await new_trending_document.save()
+        return new_trending
+    } else {
+        return null
+    }
 }
 
-const get_trending = async (latitude, longitude) => {
+const get_trending = async (latitude, longitude, user) => {
     try {
         const trending = await Trending.aggregate([
             {
@@ -99,15 +125,42 @@ const get_trending = async (latitude, longitude) => {
                             Number.parseFloat(latitude)
                         ] 
                     },
-                    //maxDistance: 20000,
+                    maxDistance: 20000,
                     distanceField: "dist.calculated",
                     includeLocs: "dist.location",
                     spherical: true
                  }
             },
             {
+                $match: {
+                    $expr: {
+                        $and: [
+                            {
+                                $eq: [
+                                    {
+                                        $indexOfArray: [
+                                            "$reports", user 
+                                        ]
+                                    },
+                                    -1
+                                ]
+                            },
+                            {
+                                $lt: [
+                                    {
+                                        $size: "$reports"
+                                    },
+                                    100
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
                 $group: {
                     "_id": {
+                        "_id": "$_id",
                         "dish_id": "$dish_id",
                         "restaurant": "$restaurant",
                         "name": "$name",
@@ -244,6 +297,7 @@ const get_trending = async (latitude, longitude) => {
                     "_id": 0,
                     "created_at": "$_id.created_at",
                     "main_image": "$_id.main_image",
+                    "_id": "$_id._id",
                     "dish_id": "$_id.dish_id",
                     "restaurant_id": "$_id.restaurant",
                     "price": "$price",
@@ -260,6 +314,7 @@ const get_trending = async (latitude, longitude) => {
             },
             {
                 $project: {
+                    "_id": "$_id",
                     "dish_id": "$dish_id",
                     "restaurant_id": "$restaurant_id",
                     "price": "$price",
@@ -650,10 +705,28 @@ const get_searched_dish = async (search="", user) => {
     }
 }
 
+const push_reports = async (user_id, trending_id, report_reason) => {
+    const new_report = new Report({
+        user: user_id,
+        destination: trending_id,
+        report: report_reason
+    })
+    await new_report.save()
+    const trending = await Trending.findOneAndUpdate({
+        "_id": trending_id
+    }, {
+        $addToSet: {
+            reports: user_id
+        }
+    })
+    return trending
+}
+
 module.exports = {
     create_trending,
     get_trending,
     get_suggestions,
     get_featured,
-    get_searched_dish
+    get_searched_dish,
+    push_reports
 }

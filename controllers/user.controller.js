@@ -11,8 +11,23 @@ const OTP_SCOPES = require('../helpers/scopes.helper')
 const msg91 = require('msg91-node-v2')
 const MSG91 = new msg91("213839A7aBh3zS5aec5fc4")
 const multer = require('multer')
+const Feedback = require('../models/feedback.model')
+const FoodRating = require('../models/foodrating.model')
+const RestaurantRating = require('../models/restaurantrating.model')
+const Inorder = require('../models/inorder.model')
+const Booking = require('../models/booking.model')
+const Tier = require('../models/tier.model')
+const Claim = require('../models/claims.model')
 const {
-    create_trending
+    create_transaction
+} = require('../services/transaction.service')
+const {
+    credit_points_to_wallet,
+    get_wallet_details
+} = require('../services/wallet.service')
+const {
+    create_trending,
+    push_reports
 } = require('../services/trending.service')
 const {
     storage
@@ -53,6 +68,9 @@ const {
     get_wallet_based_user
 } = require('../services/wallet.service')
 const hbs = require('nodemailer-express-handlebars')
+const {
+    sendNotificationToDevices
+} = require('../helpers/firebase.helper')
 
 mailer.use('compile', hbs({
     viewEngine: {
@@ -260,12 +278,18 @@ module.exports = {
         const otp = req.body["otp"]
         const scope = req.body["scope"]
         const grant = req.body["grant"]
+        const device_id = req.body["device_id"]
         const user_agent = req.headers["user-agent"]
         const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
         const is_valid_otp = await validate_otp(grant, otp, scope)
         if(is_valid_otp){
             const user = await get_user_details_by_email(grant)
             await invalidate_otp(grant, otp, scope)
+            await user.updateOne({
+                $addToSet: {
+                    "device_id": device_id
+                }
+            })
             const passkey = await create_passkey(grant, "email", grant, ip, user_agent)
             if(passkey != null){
                 res.json({
@@ -457,8 +481,16 @@ module.exports = {
         for(let i=0;i<req.files.length;i++){
             images.push(req.files[i]["path"])
         }
-        await create_trending(dish_id, latitude, rating, review, longitude,created_by, email , restaurant_id, contact, restaurant_name, dish_name, isVeg, images, address)
-        res.send("ok")
+        const rating__ = await create_trending(dish_id, latitude, rating, review, longitude,created_by, email , restaurant_id, contact, restaurant_name, dish_name, isVeg, images, address)
+        if(rating__ != null){
+            res.send("ok")
+        } else {
+            res.status(201)
+            res.json({
+                "message": "You have already reviewed this dish",
+                "status": 201
+            })
+        }
         })
         
     },
@@ -475,6 +507,178 @@ module.exports = {
             wallet,
             transactions
         })
+    },
+    report: async (req, res, next) => {
+        const trending_id = req.body["trending_id"]
+        const user = res.locals["user_id"].toString()
+        const reason = req.body["report_reason"]
+        const report = await push_reports(user, trending_id, reason)
+        if(report != null){
+            res.send("ok")
+        } else {
+            res.status(500)
+            res.send("not ok")
+        }
+    },
+    referral: async (req, res, next) => {
+        const user = res.locals["user_id"]
+        const referrer = req.body["referrer"]
+        const user_agent = req.headers["user-agent"]
+        const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+        const user_document = await Users.findOne({
+            "_id": user
+        })
+        if(user_document["referrer"] == ""){
+            const referrer_document = await Users.findOne({
+                "_id": referrer
+            })
+            if(referrer_document != null){
+                await user_document.updateOne({
+                    $set: {
+                        "referrer": referrer
+                    }
+                })
+                const wallet = await get_wallet_based_user(referrer)
+                await create_transaction(wallet["_id"], `Referred ${user_document["first_name"]}`, 50, 1, ip,`${user_document["first_name"] + " " + (user["last_name"] != null ? user["last_name"] : "") }`,referrer,user_agent)
+                const credit = await credit_points_to_wallet(referrer, 50)
+                if(credit != null){
+                    sendNotificationToDevices(referrer_document["device_id"], {
+                        "notification": {
+                            "title": "You just earned \u20b9 50",
+                            "body": `Hello, ${referrer_document["first_name"]}. You just earned \u20B950 by referring ${user_document["first_name"]}`
+                        },
+                    })
+                    res.send("ok")
+                } else {
+                    res.status(500)
+                    res.send("false")
+                }
+            }
+        } else {
+            res.status(403)
+            res.json({
+                "status": 403,
+                "message": "You have already been referred"
+            })
+        }
+    },
+    feedback: async (req, res, next) => {
+        const like = req.body["like"]
+        const improvement = req.body["improvement"]
+        const new_feedback = new Feedback({
+            user: res.locals["user"],
+            like: like,
+            improvement: improvement
+        })
+        try{
+            await new_feedback.save()
+            res.send("ok")
+        }catch(FEEDBACK_ERROR){
+            res.status(500)
+            res.send("fail")
+        }
+    },
+    tier: async (req, res, next) => {
+        const user = res.locals["user"]
+        const user_id = res.locals["user_id"]
+        const food_ratings = await FoodRating.find({
+            "email": user
+        })
+        const food_ratings_count = food_ratings.length
+        const restaurant_ratings = await RestaurantRating.find({
+            "email": user
+        })
+        const restaurant_ratings_count = restaurant_ratings.length
+        const inorders = await Inorder.find({
+            "email": user,
+            "order_status": 4
+        })
+        const inorder_length = inorders.length
+        const referral = await Users.find({
+            "referrar": user_id
+        })
+        const referral_length = referral.length
+        const booking = await Booking.find({
+            "status": 4
+        })
+        const booking_count = booking.length
+        const tier_claim = await Claim.find({
+            "user": user_id
+        })
+        const tier_details = await Tier.findOne({
+            "level": tier_claim+1
+        })
+        var is_claimable = false;
+        if(food_ratings_count >= tier_details["food_ratings"] && restaurant_ratings_count >= tier_details["restaurant_ratings"] && inorder_length >= tier_details["inorders"] && booking_count >= tier_details["bookings"] && referral_length >= tier_details["referrals"]){
+            is_claimable = true
+        }
+        res.json({
+            "tier": tier_details,
+            is_claimable: is_claimable,
+            "achievements": {
+                "food_ratings": food_ratings_count,
+                "restaurant_ratings": restaurant_ratings_count,
+                "inorders": inorder_length,
+                "bookings": booking_count,
+                "referrals": referral_length
+            }
+        })
+    },
+
+    claim: async (req, res, next) => {
+        const tier = req.body["tier"]
+        const user = res.locals["user"]
+        const user_id = res.locals["user_id"]
+        const user_agent = req.headers["user-agent"]
+        const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+        const food_ratings = await FoodRating.find({
+            "email": user
+        })
+        const food_ratings_count = food_ratings.length
+        const restaurant_ratings = await RestaurantRating.find({
+            "email": user
+        })
+        const restaurant_ratings_count = restaurant_ratings.length
+        const inorders = await Inorder.find({
+            "email": user,
+            "order_status": 4
+        })
+        const inorder_length = inorders.length
+        const referral = await Users.find({
+            "referrar": user_id
+        })
+        const referral_length = referral.length
+        const booking = await Booking.find({
+            "status": 4
+        })
+        const booking_count = booking.length
+        const tier_claim = await Claim.find({
+            "user": user_id
+        })
+        const tier_details = await Tier.findOne({
+            "_id": tier
+        })
+        var is_claimable = false;
+        if(food_ratings_count >= tier_details["food_ratings"] && restaurant_ratings_count >= tier_details["restaurant_ratings"] && inorder_length >= tier_details["inorders"] && booking_count >= tier_details["bookings"] && referral_length >= tier_details["referrals"]){
+            is_claimable = true
+        }
+        if(is_claimable){
+            const wallet = await get_wallet_based_user(user_id)
+            await create_transaction(wallet["_id"], "Completing Tier Tasks", tier_details["reward"], 1, ip, "Mazon Technologies Pvt. Ltd.", user_id, user_agent)
+            await credit_points_to_wallet(user_id, tier_details["reward"])
+            const new_claim = new Claim({
+                tier: tier,
+                user: user_id
+            })
+            await new_claim.save()
+            res.send("ok")
+        } else {
+            res.status(403)
+            res.json({
+                "message": "Kindly complete all tasks before claiming",
+                "status": 403
+            })
+        }
     }
 }
 

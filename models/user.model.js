@@ -15,10 +15,13 @@ const User = new mongoose.Schema({
         type: String,
         required: true
     },
+    referrer: "",
     password: {
         type: String,
     },
-    offers_availed: [String],
+    offers_availed: [
+        { offer_code: String, availed_at: Date }
+    ],
     mobile: {
         type: String,
         required: true
