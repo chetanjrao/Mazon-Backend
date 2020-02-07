@@ -1,5 +1,6 @@
 const Trending = require('../models/trending.model')
 const Dish = require('../models/dish.model')
+
 const Menu = require('../models/menu.model')
 const Restaurant = require('../models/restaurant.model')
 const Users = require('../models/user.model')
@@ -13,57 +14,6 @@ const Report = require('../models/report.model')
 const create_trending = async (dish_id, latitude, rating, review, longitude, created_by, email, restaurant_id, contact, restaurant_name='', dish_name='', isVeg=true, images, address='')=>{
     let current_dish_id = dish_id
     let current_restaurant_id = restaurant_id
-    if(dish_id == undefined){
-        const dish_check = await Dish.findOne({
-            "name": dish_name
-        })
-        if(dish_check == null){
-            let slug = ""
-            let split = dish_name.split(' ')
-            for(let i=0;i<split.length;i++){
-                slug += split[i].toLowerCase()
-            }
-            const new_dish_document = new Dish({
-                name: dish_name,
-                images: images,
-                slug: slug,
-                isVeg: isVeg,
-                created_by: created_by
-            })
-            const new_dish = await new_dish_document.save()
-            current_dish_id = new_dish["_id"]
-        } else {
-            current_dish_id = dish_check["_id"]
-        }
-    }
-    if(dish_id != undefined){
-        await Dish.findOneAndUpdate({
-            "_id": current_dish_id
-        }, {
-            $push: {
-                images: images
-            }
-        })
-    }
-    await Menu.findOneAndUpdate({
-        "dish_id": current_dish_id,
-        "rId": current_restaurant_id
-    }, {
-        $push: {
-            images: images
-        }
-    })
-    if(restaurant_id == undefined){
-        const restaurant_check = await Suggestion.findOne({
-            "name": restaurant_name
-        })
-        if(restaurant_check == null){
-            const new_restaurant = await create_suggestion(restaurant_name, latitude, longitude, contact, email, address)
-            current_restaurant_id = new_restaurant['_id']
-        } else {
-            current_restaurant_id = restaurant_check["_id"]
-        }
-    }
     const new_trending_document = new Trending({
         "dish_id": current_dish_id,
         restaurant: current_restaurant_id,
@@ -79,22 +29,16 @@ const create_trending = async (dish_id, latitude, rating, review, longitude, cre
     const prev = new Date(now)
     const current_recent_rating = await FoodRating.find({
         $or: [
-            {   "dish_id": current_dish_id,
-                "restaurant_id": current_restaurant_id,
-                "created_at": {
-                    $lt: now
-                }
-            },
             {
                 "dish_id": current_dish_id,
                 "restaurant_id": current_restaurant_id,
+                "user": created_by,
                 "created_at": {
                     $gte: prev
                 }
             }
         ]
     })
-    console.log(current_recent_rating)
     if(current_recent_rating.length == 0){
         const new_food_rating_document = new FoodRating({
             user: created_by,
@@ -159,25 +103,21 @@ const get_trending = async (latitude, longitude, user) => {
             },
             {
                 $group: {
+                    id: {
+                        $last: "$_id",
+                    },
                     "_id": {
-                        "_id": "$_id",
                         "dish_id": "$dish_id",
                         "restaurant": "$restaurant",
-                        "name": "$name",
-                        "main_image": "$images",
-                        "isVeg": "$isVeg",
-                        "dist": "$dist",
-                        "description": "$description",
-                        "created_at": "$created_at"
+                    },
+                    "created_at": {
+                        $first: "$created_at"
+                    },
+                    "dist": {
+                        "$first": "$dist"
                     },
                     location: {
                         $last: "$location"
-                    },
-                    "rating": {
-                        $avg: "$rating"
-                    },
-                    "total": {
-                        $sum: 1
                     }
                 }
             },
@@ -202,33 +142,6 @@ const get_trending = async (latitude, longitude, user) => {
                 }
             },
             {
-                $project: {
-                    "location": "$location",
-                    "dist": "$_id.dist",
-                    "menu_data": {
-                        $arrayElemAt: [ "$menu_data", 0 ]
-                    }
-                },
-            },
-            {
-                $project: {
-                    "dist": "$dist",
-                    "location": "$location",
-                    "image": {
-                        $arrayElemAt: ["$menu_data.images", 0]
-                    },
-                    "price": "$menu_data.price" 
-                }
-            },
-            {
-                $project: {
-                    "dist": "$dist",
-                    "image": "$image",
-                    "price": "$price",
-                    "location": "$location",
-                }
-            },
-            {
                 $lookup: {
                     from: "dishes",
                     let: {dish: { $toObjectId: "$_id.dish_id" } },
@@ -245,12 +158,48 @@ const get_trending = async (latitude, longitude, user) => {
                                 "_id": 0,
                                 "categories": "$categories",
                                 "name": "$name",
+                                "images": "$images",
                                 "description": "$description",
                                 "isVeg": "$isVeg"
                             }
                         },
                     ],
                     as: "dish_data" 
+                }
+            },
+            {
+                $project: {
+                    "location": "$location",
+                    "dist": "$dist",
+                    "id": "$id",
+                    "menu_data": {
+                        $arrayElemAt: [ "$menu_data", 0 ]
+                    },
+                    "dish_data": {
+                        $arrayElemAt: [ "$dish_data", 0 ]
+                    }
+                },
+            },
+            {
+                $project: {
+                    "dist": "$dist",
+                    "location": "$location",
+                    "id": "$id",
+                    "dish_data": "$dish_data",
+                    "image": {
+                        $arrayElemAt: ["$dish_data.images", 0]
+                    },
+                    "price": "$menu_data.price" 
+                }
+            },
+            {
+                $project: {
+                    "dist": "$dist",
+                    "id": "$id",
+                    "image": "$image",
+                    "price": "$price",
+                    "dish_data": "$dish_data",
+                    "location": "$location",
                 }
             },
             {
@@ -295,18 +244,15 @@ const get_trending = async (latitude, longitude, user) => {
             {
                 $project: {
                     "_id": 0,
-                    "created_at": "$_id.created_at",
-                    "main_image": "$_id.main_image",
-                    "_id": "$_id._id",
+                    "created_at": "$created_at",
+                    "id": "$id",
                     "dish_id": "$_id.dish_id",
                     "restaurant_id": "$_id.restaurant",
                     "price": "$price",
                     "location": "$location",
                     "image": "$image",
                     "dist": "$dist",
-                    "dish_data": {
-                        $arrayElemAt: [ "$dish_data" ,0]
-                    },
+                    "dish_data": "$dish_data",
                     "ratings_data": {
                         $arrayElemAt: [ "$ratings_data" ,0]
                     },
@@ -314,7 +260,7 @@ const get_trending = async (latitude, longitude, user) => {
             },
             {
                 $project: {
-                    "_id": "$_id",
+                    "id": "$id",
                     "dish_id": "$dish_id",
                     "restaurant_id": "$restaurant_id",
                     "price": "$price",

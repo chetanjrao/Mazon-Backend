@@ -20,7 +20,11 @@ const {
     tier,
     claim,
     referral,
-    feedback
+    feedback,
+    inorders_conc,
+    bookings_con,
+    get_ratings_con,
+    rating_con
 } = require("../controllers/user.controller")
 
 router.use(validate_token)
@@ -36,5 +40,9 @@ router.route("/tier").get(tier)
 router.route("/claim").post(claim)
 router.route("/feedback").post(feedback)
 router.route("/referral").post(referral)
+router.route("/inorders").get(inorders_conc)
+router.route("/bookings").get(bookings_con)
+router.route("/ratings").get(get_ratings_con)
+router.route("/post").post(rating_con)
 
 module.exports = router

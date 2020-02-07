@@ -1,5 +1,6 @@
 const Dish = require('../models/dish.model')
 const Ratings = require('../models/foodrating.model')
+const Trending = require('../models/trending.model')
 const mongoose = require('mongoose')
 const {
     get_user_details_by_email
@@ -160,6 +161,9 @@ const get_dish_details = async (dish_id, user) => {
                         $project: {
                             "_id": 0,
                             "rating": "$rating",
+                            "review": "$review",
+                            "images": "$images",
+                            "created_at": "$created_at",
                             "days": {
                                 $floor: {
                                     $divide: [
@@ -176,6 +180,10 @@ const get_dish_details = async (dish_id, user) => {
                             "user": {
                                 $arrayElemAt: ["$user_data", 0]
                             }
+                        }
+                    },{
+                        $sort: {
+                            "created_at": -1
                         }
                     },
                     {
@@ -308,9 +316,39 @@ const get_dish_details = async (dish_id, user) => {
     return dish_data
 }
 
+const get_images = async (dish_id) => {
+    let final_data = [];
+    const main_images = await Dish.find({
+        "dish_id": dish_id
+    }, "images")
+    for(let i=0;i<main_images.length;i++){
+        for(let j=0;j<main_images[i]["images"].length;j++){
+            final_data.push(main_images[i]["images"][j])
+        }
+    }
+    const rev_images = await Ratings.find({
+        "dish_id": dish_id
+    })
+    for(let i=0;i<rev_images.length;i++){
+        for(let j=0;j<rev_images[i]["images"].length;j++){
+            final_data.push(rev_images[i]["images"][j])
+        }
+    }
+    const tren_images = await Tre.find({
+        "dish_id": dish_id
+    })
+    for(let i=0;i<tren_images.length;i++){
+        for(let j=0;j<tren_images[i]["images"].length;j++){
+            final_data.push(tren_images[i]["images"][j])
+        }
+    }
+    return final_data
+}
+
 module.exports = {
     create_dish,
     get_dish,
+    get_images,
     get_dishes,
     get_dish_rating,
     get_dish_details

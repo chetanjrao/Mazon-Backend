@@ -14,8 +14,10 @@ const multer = require('multer')
 const Feedback = require('../models/feedback.model')
 const FoodRating = require('../models/foodrating.model')
 const RestaurantRating = require('../models/restaurantrating.model')
+const Restaurant = require('../models/restaurant.model')
 const Inorder = require('../models/inorder.model')
 const Booking = require('../models/booking.model')
+const Trending = require('../models/trending.model')
 const Tier = require('../models/tier.model')
 const Claim = require('../models/claims.model')
 const {
@@ -71,6 +73,7 @@ const hbs = require('nodemailer-express-handlebars')
 const {
     sendNotificationToDevices
 } = require('../helpers/firebase.helper')
+const DishSuggestion = require('../models/dishsuggestion.model')
 
 mailer.use('compile', hbs({
     viewEngine: {
@@ -460,12 +463,26 @@ module.exports = {
         }
     },
     create_trending_con: async (req, res, next) => {
+        const created_by = res.locals["user_id"]
+        const email = res.locals["user"]
         const uploader = multer({
             storage: storage
         }).array("images[]")
         let images = []
-        const created_by = res.locals["user_id"]
-        const email = res.locals["user"]
+        const now = new Date()
+        now.setDate(now.getDate() - 1)
+        const prev = new Date(now)
+        const check = await Trending.find({
+            $or: [
+                {
+                    "created_by": created_by,
+                    "created_at": {
+                        $gte: prev
+                    }
+                }
+            ]
+        })
+        if(check.length < 3){
         uploader(req, res, async function(err){
         const dish_id = req.body["dish_id"]
         const restaurant_id = req.body["restaurant_id"]
@@ -481,6 +498,52 @@ module.exports = {
         for(let i=0;i<req.files.length;i++){
             images.push(req.files[i]["path"])
         }
+        if(dish_id == undefined){
+            const dish_check = await Dish.findOne({
+                "name": dish_name
+            })
+            if(dish_check == null){
+                let slug = ""
+                let split = dish_name.split(' ')
+                for(let i=0;i<split.length;i++){
+                    slug += split[i].toLowerCase()
+                }
+                const new_dish_document = new DishSuggestion({
+                    name: dish_name,
+                    images: images,
+                    slug: slug,
+                    isVeg: isVeg,
+                    created_by: created_by
+                })
+                await new_dish_document.save()
+            }
+        }
+        // if(dish_id != undefined){
+        //     await Dish.findOneAndUpdate({
+        //         "_id": current_dish_id
+        //     }, {
+        //         $push: {
+        //             images: images
+        //         }
+        //     })
+        // }
+        // await Menu.findOneAndUpdate({
+        //     "dish_id": current_dish_id,
+        //     "rId": current_restaurant_id
+        // }, {
+        //     $push: {
+        //         images: images
+        //     }
+        // })
+        if(restaurant_id == undefined){
+            const restaurant_check = await Suggestion.findOne({
+                "name": restaurant_name
+            })
+            if(restaurant_check == null){
+                await create_suggestion(restaurant_name, Number.parseFloat(latitude), Number.parseFloat(longitude), contact, email, address)
+            }
+        }
+        if(restaurant_id != undefined && dish_id != undefined ){
         const rating__ = await create_trending(dish_id, latitude, rating, review, longitude,created_by, email , restaurant_id, contact, restaurant_name, dish_name, isVeg, images, address)
         if(rating__ != null){
             res.send("ok")
@@ -491,8 +554,18 @@ module.exports = {
                 "status": 201
             })
         }
+    } else {
+        res.status(200)
+        res.send("ok")
+    }
         })
-        
+    } else {
+        res.status(201)
+        res.json({
+            "message": "You have reviewed maximum dishes today",
+            "status": 201
+        })
+    }
     },
     profile: async (req, res, next) => {
         const user = await get_complete_profile(res.locals["user"], res.locals["user_id"])
@@ -679,6 +752,150 @@ module.exports = {
                 "status": 403
             })
         }
+    },
+    rating_con: async (req, res, next) => {
+        const uploader = multer({
+            storage: storage
+        }).array("images[]")
+        let images = []
+        const created_by = res.locals["user_id"]
+        const email = res.locals["user"]
+        uploader(req, res, async function(err){
+            if(req.files != undefined){
+                for(let i=0;i<req.files.length;i++){
+                    images.push(req.files[i]["path"])
+                }
+            }
+            const rating = req.body["rating"]
+            const review = req.body["review"]
+            const restaurant = req.body["restaurant"]
+            const hygiene = req.body["hygiene"]
+            const ambience = req.body["ambience"]
+            const check = await RestaurantRating.findOne({
+                //"user": created_by,
+                "email": email
+            })
+            if(check == null){
+                const new_rating = new RestaurantRating({
+                    user: created_by,
+                    email: email,
+                    rating: rating,
+                    review: review,
+                    restaurant: restaurant,
+                    ambience: ambience,
+                    hygiene: hygiene
+                })
+                const new_ra = await new_rating.save()
+                if(new_ra != null){
+                    res.send("ok")
+                }
+            } else {
+                res.status(403)
+                res.send("You have already reviewed this restaurant")
+            }
+        })
+    },
+    edit: async(req, res, next) => {
+
+    },
+    inorders_conc: async (req, res, next) => {
+        const user = res.locals["user"]
+        const inorders = await Inorder.find({
+            "email": user
+        })
+        const final = await Restaurant.populate(inorders, {
+            "path": "rId",
+            "select": "name"
+        })
+        res.json(final)
+    },
+    bookings_con: async (req, res, next) => {
+        const user = res.locals["user"]
+        const bookings = await Booking.find({
+            "email": user
+        })
+        const final = await Restaurant.populate(bookings, {
+            "path": "rId",
+            "select": "name"
+        })
+        res.json(final)
+    },
+    get_ratings_con: async (req, res, next) => {
+        const user = res.locals["user"]
+        const ratings = await FoodRating.aggregate([
+            {
+                $match: {
+                    email: user
+                }
+            },
+            {
+                $lookup: {
+                    "from": "dishes",
+                    "let": { "dish": {
+                        $toObjectId: "$dish_id"
+                    } },
+                    "pipeline": [
+                        {
+                            $match: {
+                                $expr: {
+                                    $eq: ["$_id", "$$dish"]
+                                }
+                            }
+                        },
+                        {
+                            $project: {
+                                "name": "$name"
+                            }
+                        }
+                    ],
+                    as: "dish_data"
+                }
+            },
+            {
+                $lookup: {
+                    "from": "restaurants",
+                    "let": { "restaurant": {
+                        $toObjectId: {
+                            $trim: {
+                                input: "$restaurant_id"}
+                        }
+                    } },
+                    "pipeline": [
+                        {
+                            $match: {
+                                $expr: {
+                                    $eq: ["$_id", "$$restaurant"]
+                                }
+                            }
+                        },
+                        {
+                            $project: {
+                                "name": "$name"
+                            }
+                        }
+                    ],
+                    as: "restaurant_data"
+                }
+            }
+        ])
+        res.json(ratings)
+    },
+    upload: async (req, res, next) => {
+        const uploader = multer({
+            storage: storage
+        }).array("image")
+        const user = res.locals["user"]
+        console.log(req.file)
+        console.log(req.files)
+        uploader(req, res, async function(err){
+            await Users.findOneAndUpdate({
+                "email": user
+            }, {
+                $set: {
+                    image: req.files[0]["path"]
+                }
+            })
+        })
     }
 }
 

@@ -20,6 +20,10 @@ const RestaurantRatingSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    email: {
+        type: String,
+        required: true
+    },
     hygiene: {
         type: Number,
         required: true

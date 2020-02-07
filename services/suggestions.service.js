@@ -4,8 +4,11 @@ const create_suggestion = async (name, latitude, longitude, contact, created_by,
     const new_suggestion_document = new Suggestion({
         name: name,
         location: {
-            latitude: latitude,
-            longitude: longitude
+            type: "Point",
+            coordinates: [
+                longitude,
+                latitude
+            ]
         },
         contact: contact,
         created_by: created_by,

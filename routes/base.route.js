@@ -13,14 +13,17 @@ const {
 } = require('../services/trending.service')
 const {
     get_dishes,
-    get_dish_details
+    get_dish_details,
+    get_images
 } = require('../services/dish.service')
 const {
     get_restaurants,
     get_searched_restaurants,
     get_most_visited_restaurants,
     featured_restaurants,
-    get_top_restaurants
+    get_top_restaurants,
+    get_restaurants_with_loc,
+    get_restaurants_powered
 } = require('../services/restaurant.service')
 
 router.route("/restaurants/filter").get(async (req, res, next)=>{
@@ -40,6 +43,11 @@ router.route("/top/restaurants").get(async (req, res, next)=>{
 
 router.route("/featured/restaurants").get(async (req, res, next)=>{
     const most_visited = await featured_restaurants()
+    res.json(most_visited)
+})
+
+router.route("/powered/restaurants").get(async (req, res, next)=>{
+    const most_visited = await get_restaurants_powered()
     res.json(most_visited)
 })
 
@@ -104,9 +112,23 @@ router.route("/search/utils/restaurants").get(async (req, res, next)=>{
     res.json(searched_document)
 })
 
+router.route("/search/utils/restaurants/loc").get(async (req, res, next)=>{
+    const search = req.query["query"]
+    const latitude = req.query["latitude"]
+    const longitude = req.query["longitude"]
+    const searched_document = await get_restaurants_with_loc(search, latitude, longitude)
+    res.json(searched_document)
+})
+
 router.route("/dishes/:dishID").get(async(req, res, next)=>{
     const dish_id = req.params["dishID"]
     const dish_data = await get_dish_details(dish_id)
+    res.json(dish_data)
+})
+
+router.route("/dishes/:dishID/images").get(async(req, res, next)=>{
+    const dish_id = req.params["dishID"]
+    const dish_data = await get_images(dish_id)
     res.json(dish_data)
 })
 

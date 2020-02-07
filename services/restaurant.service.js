@@ -22,6 +22,48 @@ const get_restaurant = async (restaurantID) => {
     return restaurant
 }
 
+const get_restaurants_powered = async () => {
+    const restaurants = await Restaurants.aggregate([
+        {
+            $match: {
+                "inorder_available": true
+            }
+        },
+        {
+            $lookup: {
+                from: "restaurantratings",
+                let: { "restaurant": {
+                    $toString: "$_id"
+                } },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: {
+                                    $eq: ["$restaurant", "$$restaurant"]
+                                }
+                            }
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            ratings: {
+                                $avg: "$rating"
+                            },
+                            total: {
+                                $sum: 1
+                            }
+                        },
+                    }
+                ],
+                as: "ratings_data"
+            }
+        },
+    ])
+    return restaurants
+}
+
 const get_restaurant_menu = async (restaurantID) => {
     const suggested_restaurant = await get_suggested_restaurant(restaurantID)
     const restaurant_menu = await Menu.aggregate([
@@ -244,6 +286,62 @@ const get_restaurants = async (query_string) => {
     return restaurant_documents
 }
 
+const get_restaurants_with_loc = async (query_string, lat, long) => {
+    const restaurant_documents = await Suggestions.aggregate([
+        {
+            $geoNear: {
+                near: {
+                    type: "Point",
+                    coordinates: [
+                        Number.parseFloat(long), 
+                        Number.parseFloat(lat)
+                    ]
+                },
+                maxDistance: 500,
+                distanceField: "dist"
+            }
+        },
+        {
+            $match: {
+                "name": {
+                    $regex: query_string.replace(/[-[\]{}()*+?.,\\/^$|#\s]/g, "\\$&"),
+                    $options: "i"
+                },
+                "is_onboarded": true
+            }
+        },
+        {
+            $project: {
+                "_id": "$_id",
+                "name" : "$name",
+                "location" : "$location",
+                "address" : "$address",
+                "onboarded_as": "$onboarded_as"
+            }
+        }
+    ])
+    return restaurant_documents
+}
+
+const get_images = async (restaurantID) => {
+    let final_data = [];
+    const main_images = await Restaurants.findOne({
+        "_id": restaurantID
+    }, "images")
+    for(let i=0;i<main_images["images"].length;i++){
+        final_data.push(main_images["images"][i])
+    }
+    const rev_images = await RatingReview.find({
+        "restaurant": restaurantID
+    })
+    for(let i=0;i<rev_images.length;i++){
+        for(let j=0;j<rev_images[i]["images"].length;j++){
+            final_data.push(rev_images[i]["images"][j])
+        }
+    }
+    return final_data
+}
+
 const get_searched_restaurants = async (query_string) => {
     const restaurant_documents = await Restaurants.aggregate([
         {
@@ -310,5 +408,8 @@ module.exports = {
     get_searched_restaurants,
     get_most_visited_restaurants,
     featured_restaurants,
-    get_top_restaurants
+    get_top_restaurants,
+    get_restaurants_with_loc,
+    get_restaurants_powered,
+    get_images
 }

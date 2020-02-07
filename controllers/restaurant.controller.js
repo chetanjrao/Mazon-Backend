@@ -96,9 +96,40 @@ module.exports = {
                 }
             }
         ])
-        const ratings_full = await RestaurantRatings.find({
-            "restaurant": restaurantID
-        })
+        const ratings_full = await RestaurantRatings.aggregate([{
+            $match: {
+                "restaurant": restaurantID
+            }
+        }, 
+        {
+            $lookup: {
+                from: "users",
+                let: {
+                    "user": "$email"
+                },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $eq: ["$email", "$$user"]
+                            }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            "name": "$first_name",
+                            "image": "$image"
+                        }
+                    }
+                ],
+                as: "user_data"
+            }
+        }, {
+            $sort: {
+                "created_at": -1
+            }
+        }])
         res.json({
             restaurant,
             ratings_data,
