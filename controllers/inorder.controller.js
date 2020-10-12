@@ -1,500 +1,583 @@
 /*
  * Created on Sat Sep 14 2019
  *
- * Author - Chethan Jagannatha Kulkarni, CTO, Mazon Services Pvt. Ltd. 
+ * Author - Chethan Jagannatha Kulkarni, CTO, Mazon Services Pvt. Ltd.
  * Copyright (c) 2019 Mazon Services Pvt. Ltd.
  */
 const {
-    calculate_amount,
-    place_inorder,
-    finish_inorder,
-    show_inorder,
-    update_inorder,
-    create_inorder_token,
-    validate_inorder_token,
-    get_active_inorder_with_email,
-    get_inorders_with_restaurant,
-    get_order_using_token,
-    get_overall_details,
-    get_token_details,
-    get_current_days_inorders_of_restaurant,
-    get_all_earnings_of_restaurant
-} = require('../services/inorder.service')
+  calculate_amount,
+  place_inorder,
+  finish_inorder,
+  show_inorder,
+  update_inorder,
+  create_inorder_token,
+  validate_inorder_token,
+  get_active_inorder_with_email,
+  get_inorders_with_restaurant,
+  get_order_using_token,
+  get_overall_details,
+  get_token_details,
+  get_current_days_inorders_of_restaurant,
+  get_all_earnings_of_restaurant,
+} = require("../services/inorder.service");
+const { sendNotificationToDevices } = require("../helpers/firebase.helper");
+const {} = require("../services/utils.service");
 const {
-    sendNotificationToDevices
-} = require('../helpers/firebase.helper')
-const {
-    
-} = require("../services/utils.service")
-const {
-    get_user_details,
-    get_user,
-    get_user_details_by_email
-} = require("../services/user.service")
-const {
-    add_analytics
-} = require("../services/analytics.service")
-const {
-    get_restaurant
-} = require('../services/restaurant.service')
-const {
-    get_popular_food_of_restaurant
-} = require('../services/menu.service')
-const {
-    get_offer_details
-} = require('../services/offer.service')
-const {
-    get_wallet_based_user
-} = require('../services/wallet.service')
+  get_user_details,
+  get_user,
+  get_user_details_by_email,
+} = require("../services/user.service");
+const { add_analytics } = require("../services/analytics.service");
+const { get_restaurant } = require("../services/restaurant.service");
+const { get_popular_food_of_restaurant } = require("../services/menu.service");
+const { get_offer_details } = require("../services/offer.service");
+const { get_wallet_based_user } = require("../services/wallet.service");
 
 const calculate_menu_amount = async (req, res, next) => {
-    const restaurant_id = req.params["restaurant_id"]
-    const menu = req.params["menu"]
-    const amount = await calculate_amount( menu)
-    res.send(amount)
-}
+  const restaurant_id = req.params["restaurant_id"];
+  const menu = req.params["menu"];
+  const amount = await calculate_amount(menu);
+  res.send(amount);
+};
 
 const place_inorder_controller = async (req, res, next) => {
-    const restaurant_id = req.body["restaurant_id"]
-    const table_no = req.body["table_no"]
-    const menu = req.body["menu"]
-    const order_token = res.locals["inorder-token"]
-    const offer_applied = req.body["offer_applied"]
-    const name = req.body["name"]
-    const phone = req.body["phone"]
-    const email = req.body["email"]
-    const user_id = res.locals["user_id"]
-    const device_id = req.body["device_id"]
-    const created_by = res.locals["user_id"]
-    var is_waiter_taking = false
-    if(res.locals["is_waiter"] == true){
-        is_waiter_taking = true
-    }
-    const inorder = await place_inorder(user_id, device_id, restaurant_id, table_no, menu, order_token, offer_applied, name, phone, email, created_by, is_waiter_taking)
-    const final_amount = await calculate_amount( menu)
-    const analytics_document = add_analytics(restaurant_id, "inorders", user_id)
-    if(inorder != {} && inorder != undefined){
-        res.json({
-            "message": "Inorder Placed",
-            "status": 200,
-            "amount": final_amount,
-            "reference": inorder["_id"]
-        })
-    } else {
-        res.status(500)
-        res.json({
-            "message": "Could not place inorder",
-            "status": 500
-        })
-    }
-}
+  const restaurant_id = req.body["restaurant_id"];
+  const table_no = req.body["table_no"];
+  const menu = req.body["menu"];
+  const order_token = res.locals["inorder-token"];
+  const offer_applied = req.body["offer_applied"];
+  const name = req.body["name"];
+  const phone = req.body["phone"];
+  const email = req.body["email"];
+  const user_id = res.locals["user_id"];
+  const device_id = req.body["device_id"];
+  const created_by = res.locals["user_id"];
+  var is_waiter_taking = false;
+  if (res.locals["is_waiter"] == true) {
+    is_waiter_taking = true;
+  }
+  const inorder = await place_inorder(
+    user_id,
+    device_id,
+    restaurant_id,
+    table_no,
+    menu,
+    order_token,
+    offer_applied,
+    name,
+    phone,
+    email,
+    created_by,
+    is_waiter_taking
+  );
+  const final_amount = await calculate_amount(menu);
+  const analytics_document = add_analytics(restaurant_id, "inorders", user_id);
+  if (inorder != {} && inorder != undefined) {
+    res.json({
+      message: "Inorder Placed",
+      status: 200,
+      amount: final_amount,
+      reference: inorder["_id"],
+    });
+  } else {
+    res.status(500);
+    res.json({
+      message: "Could not place inorder",
+      status: 500,
+    });
+  }
+};
 
 const get_order_summary = async (req, res, next) => {
-    const inorder_token = req.headers["x-mazon-token"]
-    const user = req.body["email"]
-    const strict = req.body["strict"]
-    const token_document = await get_token_details(inorder_token, user)
-    const inorder_check = await get_order_using_token(inorder_token, strict)
-    var offer_amount = 0;
-    const offer_applied = token_document["offer_code"]
-    const response = []
-    var total_amount = 0;
-    if(inorder_check.length > 0){
-        for(var i=0;i<inorder_check.length;i++){
-            const current_restaurant = inorder_check[i]["rId"]
-            const items = inorder_check[i]["menu"]
-            const current_inorder_details = await get_overall_details(items)
-            const order_id = inorder_check[i]["_id"]
-            const placed_at = inorder_check[i]["order_date_time"]
-            const restaurant_name = await get_restaurant(inorder_check[i]["rId"])
-            const price = await calculate_amount(items)
-            total_amount += price;
-            response.push({
-                "restaurant_name": restaurant_name["name"],
-                "items": current_inorder_details,
-                "order_id": order_id,
-                "name": inorder_check[i]["name"],
-                "email": inorder_check[i]["email"],
-                "phone": inorder_check[i]["phone"],
-                "placed_at": placed_at,
-                "table_no": inorder_check[i]["rTable"],
-                "price": price
-            })
-        }
+  const inorder_token = req.headers["x-mazon-token"];
+  const user = req.body["email"];
+  const strict = req.body["strict"];
+  const token_document = await get_token_details(inorder_token, user);
+  const inorder_check = await get_order_using_token(inorder_token, strict);
+  var offer_amount = 0;
+  const offer_applied = token_document["offer_code"];
+  const response = [];
+  let cgst = 0;
+  let sgst = 0;
+  let service_charge = 0;
+  var total_amount = 0;
+  if (inorder_check.length > 0) {
+    for (var i = 0; i < inorder_check.length; i++) {
+      const current_restaurant = inorder_check[i]["rId"];
+      const items = inorder_check[i]["menu"];
+      const current_inorder_details = await get_overall_details(items);
+      const order_id = inorder_check[i]["_id"];
+      const placed_at = inorder_check[i]["order_date_time"];
+      const restaurant_name = await get_restaurant(inorder_check[i]["rId"]);
+      cgst = restaurant_name["cgst"];
+      sgst = restaurant_name["sgst"];
+      service_charge = restaurant_name["service_charge"];
+      const price = await calculate_amount(items);
+      total_amount += price;
+      response.push({
+        restaurant_name: restaurant_name["name"],
+        items: current_inorder_details,
+        order_id: order_id,
+        name: inorder_check[i]["name"],
+        email: inorder_check[i]["email"],
+        phone: inorder_check[i]["phone"],
+        placed_at: placed_at,
+        table_no: inorder_check[i]["rTable"],
+        price: price,
+      });
     }
-    if(offer_applied.length > 0){
-        const offer = await get_offer_details(offer_applied)
-        if(total_amount > offer["min_amount"]){
-            if(offer["is_discount"]["is_percent"]){
-                var discount_amount = total_amount * offer["is_discount"]["discount_amount"] / 100
-                if(discount_amount > offer["is_discount"]["max"]){
-                    offer_amount = offer["is_discount"]["max"]
-                } else {
-                    offer_amount = discount_amount
-                }
-            } else {
-                offer_amount = offer["is_discount"]["discount_amount"];
-            }
+  }
+  if (offer_applied.length > 0) {
+    const offer = await get_offer_details(offer_applied);
+    if (total_amount > offer["min_amount"]) {
+      if (offer["is_discount"]["is_percent"]) {
+        var discount_amount =
+          (total_amount * offer["is_discount"]["discount_amount"]) / 100;
+        if (discount_amount > offer["is_discount"]["max"]) {
+          offer_amount = offer["is_discount"]["max"];
+        } else {
+          offer_amount = discount_amount;
         }
+      } else {
+        offer_amount = offer["is_discount"]["discount_amount"];
+      }
     }
-    var final_amount = total_amount - offer_amount
-    res.json({
-        "total": total_amount,
-        "offer_applied": offer_applied,
-        "offer_amount": offer_amount,
-        "final_price": final_amount,
-        "orders": response
-    })
-}
+  }
+  let cgst_amount = (cgst * total_amount) / 100;
+  let sgst_amount = (sgst * total_amount) / 100;
+  let service_charge_amount = (service_charge * total_amount) / 100;
+  var final_amount =
+    total_amount -
+    offer_amount +
+    cgst_amount +
+    sgst_amount +
+    service_charge_amount;
+  res.json({
+    total: total_amount,
+    cgst: cgst,
+    sgst: sgst,
+    service_charge: service_charge,
+    cgst_amount: cgst_amount,
+    sgst_amount: sgst_amount,
+    service_charge_amount: service_charge_amount,
+    offer_applied: offer_applied,
+    offer_amount: offer_amount,
+    final_price: final_amount,
+    orders: response,
+  });
+};
 
 const get_order_amount = async (req, res, next) => {
-    const inorder_token = req.headers["x-mazon-token"]
-    const user = req.body["email"]
-    const user_id = res.locals["user_id"]
-    const strict = req.body["strict"]
-    const token_document = await get_token_details(inorder_token, user)
-    const inorder_check = await get_order_using_token(inorder_token, strict)
-    var offer_amount = 0;
-    const offer_applied = token_document["offer_code"]
-    var total_amount = 0;
-    const wallet_document = await get_wallet_based_user(user_id)
-    const wallet_points = wallet_document["wallet_points"]
-    var resName;
-    var cusName;
-    var cusMobile;
-    var cusEmail;
-    if(inorder_check.length > 0){
-        for(var i=0;i<inorder_check.length;i++){
-            const current_restaurant = inorder_check[i]["rId"]
-            const items = inorder_check[i]["menu"]
-            const current_inorder_details = await get_overall_details(items)
-            const order_id = inorder_check[i]["_id"]
-            const placed_at = inorder_check[i]["order_date_time"]
-            const restaurant_name = await get_restaurant(inorder_check[i]["rId"])
-            resName = restaurant_name;
-            cusName = inorder_check[i]["name"]
-            cusMobile = inorder_check[i]["phone"]
-            cusEmail = inorder_check[i]["email"]
-            const price = await calculate_amount(items)
-            total_amount += price;
+  const inorder_token = req.headers["x-mazon-token"];
+  const user = req.body["email"];
+  const user_id = res.locals["user_id"];
+  const strict = req.body["strict"];
+  const token_document = await get_token_details(inorder_token, user);
+  const inorder_check = await get_order_using_token(inorder_token, strict);
+  var offer_amount = 0;
+  const offer_applied = token_document["offer_code"];
+  var total_amount = 0;
+  const wallet_document = await get_wallet_based_user(user_id);
+  const wallet_points = wallet_document["wallet_points"];
+  var resName;
+  var cusName;
+  var cusMobile;
+  var cusEmail;
+  if (inorder_check.length > 0) {
+    for (var i = 0; i < inorder_check.length; i++) {
+      const current_restaurant = inorder_check[i]["rId"];
+      const items = inorder_check[i]["menu"];
+      const current_inorder_details = await get_overall_details(items);
+      const order_id = inorder_check[i]["_id"];
+      const placed_at = inorder_check[i]["order_date_time"];
+      const restaurant_name = await get_restaurant(inorder_check[i]["rId"]);
+      resName = restaurant_name;
+      cusName = inorder_check[i]["name"];
+      cusMobile = inorder_check[i]["phone"];
+      cusEmail = inorder_check[i]["email"];
+      const price = await calculate_amount(items);
+      total_amount += price;
+    }
+  }
+  if (offer_applied.length > 0) {
+    const offer = await get_offer_details(offer_applied);
+    if (total_amount > offer["min_amount"]) {
+      if (offer["is_discount"]["is_percent"]) {
+        var discount_amount =
+          (total_amount * offer["is_discount"]["discount_amount"]) / 100;
+        if (discount_amount > offer["is_discount"]["max"]) {
+          offer_amount = offer["is_discount"]["max"];
+        } else {
+          offer_amount = discount_amount;
         }
+      } else {
+        offer_amount = offer["is_discount"]["discount_amount"];
+      }
     }
-    if(offer_applied.length > 0){
-        const offer = await get_offer_details(offer_applied)
-        if(total_amount > offer["min_amount"]){
-            if(offer["is_discount"]["is_percent"]){
-                var discount_amount = total_amount * offer["is_discount"]["discount_amount"] / 100
-                if(discount_amount > offer["is_discount"]["max"]){
-                    offer_amount = offer["is_discount"]["max"]
-                } else {
-                    offer_amount = discount_amount
-                }
-            } else {
-                offer_amount = offer["is_discount"]["discount_amount"];
-            }
-        }
-    }
-    var final_amount = total_amount - offer_amount
-    var wallet_deduction_limit = 30 * final_amount / 100;
-    var wallet_final_deduction = 0;
-    if(wallet_points <= wallet_deduction_limit){
-        wallet_final_deduction = wallet_points
-    } else {
-        wallet_final_deduction = Math.floor(wallet_deduction_limit)
-    }
-    res.json({
-        "total": total_amount,
-        "offer_applied": offer_applied,
-        "wallet_points": wallet_points,
-        "wallet_redeemable_limit": wallet_final_deduction,
-        "amount_final": final_amount - wallet_final_deduction,
-        "offer_amount": offer_amount,
-        "final_price": final_amount,
-        "customer_name": cusName,
-        "customer_mobile": cusMobile,
-        "customer_email": cusEmail,
-        "restaurant_name": resName["name"]
-    })
-}
+  }
+  var final_amount = total_amount - offer_amount;
+  var wallet_deduction_limit = (30 * final_amount) / 100;
+  var wallet_final_deduction = 0;
+  if (wallet_points <= wallet_deduction_limit) {
+    wallet_final_deduction = wallet_points;
+  } else {
+    wallet_final_deduction = Math.floor(wallet_deduction_limit);
+  }
+  res.json({
+    total: total_amount,
+    offer_applied: offer_applied,
+    wallet_points: wallet_points,
+    wallet_redeemable_limit: wallet_final_deduction,
+    amount_final: final_amount - wallet_final_deduction,
+    offer_amount: offer_amount,
+    final_price: final_amount,
+    customer_name: cusName,
+    customer_mobile: cusMobile,
+    customer_email: cusEmail,
+    order_id: inorder_token,
+    restaurant_name: resName["name"],
+  });
+};
 
 const check_inorder_validity = async (req, res, next) => {
-    const email = req.body["email"]
-    const inorder = await get_active_inorder_with_email(email)
-    if(inorder != null){
-        res.status(403)
-        res.json({
-            "message": "Inorder already present",
-            "reference": inorder["_id"],
-            "offer_applied" : inorder["offer_code"] == null ? "" : inorder["offer_code"] ,
-            "token": inorder["order_token"],
-            "status": 403
-        })
-    } else {
-        next()
-    }
-}
+  const email = req.body["email"];
+  const inorder = await get_active_inorder_with_email(email);
+  if (inorder != null) {
+    res.status(403);
+    res.json({
+      message: "Inorder already present",
+      reference: inorder["_id"],
+      offer_applied: inorder["offer_code"] == null ? "" : inorder["offer_code"],
+      token: inorder["order_token"],
+      status: 403,
+    });
+  } else {
+    next();
+  }
+};
 
 const get_weekly_inorders_data = async (req, res, next) => {
-    const restuarantID = req.params["restaurantID"]
-    const dates = []
-    const response = {}
-    const finalResponse = {}
-    const arrayOfResponses = []
-    const days = ["Sunday", "Monday","Tuesday", "Wednesday", "Thrusday", "Friday", "Saturday"]
-    for(var i=0;i<days.length;i++){
-        const date = new Date()
-        date.setDate(date.getDate() - i)
-        const new_date = new Date(date)
-        dates.push(new_date)
+  const restuarantID = req.params["restaurantID"];
+  const dates = [];
+  const response = {};
+  const finalResponse = {};
+  const arrayOfResponses = [];
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thrusday",
+    "Friday",
+    "Saturday",
+  ];
+  for (var i = 0; i < days.length; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const new_date = new Date(date);
+    dates.push(new_date);
+  }
+  for (var i = 0; i < dates.length; i++) {
+    const data = await get_current_days_inorders_of_restaurant(
+      restuarantID,
+      dates[i]
+    );
+    if (data.length > 0) {
+      response[`${days[dates[i].getDay()]}`] = data[0];
+      arrayOfResponses.push(data[0]);
+    } else {
+      response[`${days[dates[i].getDay()]}`] = {
+        total: 0,
+        inorders: 0,
+      };
+      arrayOfResponses.push({
+        total: 0,
+        inorders: 0,
+      });
     }
-    for(var i=0;i<dates.length;i++){
-        const data = await get_current_days_inorders_of_restaurant(restuarantID, dates[i])
-        if(data.length > 0){
-            response[`${days[dates[i].getDay()]}`] = data[0]
-            arrayOfResponses.push(data[0])
-        } else {
-            response[`${days[dates[i].getDay()]}`] = {
-                "total": 0,
-                "inorders": 0
-            }
-            arrayOfResponses.push({
-            "total": 0,
-            "inorders": 0
-            })
-        }
-    }
-    const top_food = await get_popular_food_of_restaurant(restuarantID)
-    const earnings = await get_all_earnings_of_restaurant(restuarantID)
-    finalResponse["inorders"] = response
-    finalResponse["bestsellers"] = top_food
-    finalResponse["max"] = Math.max.apply(Math, arrayOfResponses.map(function(o) { return o.total; }))
-    finalResponse["min"] = Math.min.apply(Math, arrayOfResponses.map(function(o) { return o.total; }))
-    finalResponse["maxOrders"] = Math.max.apply(Math, arrayOfResponses.map(function(o) { return o.inorders; }))
-    finalResponse["minOrders"] = Math.min.apply(Math, arrayOfResponses.map(function(o) { return o.inorders; }))
-    finalResponse["earnings"] = earnings[0]
-    res.json(finalResponse)
-}
+  }
+  const top_food = await get_popular_food_of_restaurant(restuarantID);
+  const earnings = await get_all_earnings_of_restaurant(restuarantID);
+  finalResponse["inorders"] = response;
+  finalResponse["bestsellers"] = top_food;
+  finalResponse["max"] = Math.max.apply(
+    Math,
+    arrayOfResponses.map(function (o) {
+      return o.total;
+    })
+  );
+  finalResponse["min"] = Math.min.apply(
+    Math,
+    arrayOfResponses.map(function (o) {
+      return o.total;
+    })
+  );
+  finalResponse["maxOrders"] = Math.max.apply(
+    Math,
+    arrayOfResponses.map(function (o) {
+      return o.inorders;
+    })
+  );
+  finalResponse["minOrders"] = Math.min.apply(
+    Math,
+    arrayOfResponses.map(function (o) {
+      return o.inorders;
+    })
+  );
+  finalResponse["earnings"] = earnings[0];
+  res.json(finalResponse);
+};
 
 const confirm_order_controller = async (req, res, next) => {
-    const order_id = req.body["order_id"]
-    const device_id = req.body["device_id"]
-    const updated_by = res.locals["user_id"]
-    const updated_order = await update_inorder(order_id, 2, updated_by, device_id)
-    const order = await show_inorder(order_id)
-    const devices = order["device_id"]
-    var payload = {
-        notification: {
-            title: `ORDER UPDATE`,
-            body: `Hey, Your Order ${order_id} has been confirmed and is being prepared in the kitchen`
-        }
-    }
-    sendNotificationToDevices(devices, payload)
-    if(updated_order != undefined){
-        res.json({
-            "message": "Order status updated succesfully",
-            "status": 200
-        })
-    } else {
-        res.json({
-            "status": 500,
-            "message": "Could not update order"
-        })
-    }
-}
+  const order_id = req.body["order_id"];
+  const device_id = req.body["device_id"];
+  const updated_by = res.locals["user_id"];
+  const updated_order = await update_inorder(
+    order_id,
+    2,
+    updated_by,
+    device_id
+  );
+  const order = await show_inorder(order_id);
+  const devices = order["device_id"];
+  var payload = {
+    notification: {
+      title: `ORDER UPDATE`,
+      body: `Hey, Your Order ${order_id} has been confirmed and is being prepared in the kitchen`,
+    },
+  };
+  sendNotificationToDevices(devices, payload);
+  if (updated_order != undefined) {
+    res.json({
+      message: "Order status updated succesfully",
+      status: 200,
+    });
+  } else {
+    res.json({
+      status: 500,
+      message: "Could not update order",
+    });
+  }
+};
 
 const cancel_order_controller = async (req, res, next) => {
-    const order_id = req.body["order_id"]
-    const device_id = req.body["device_id"]
-    const updated_by = res.locals["user_id"]
-    const updated_order = await update_inorder(order_id, 5, updated_by, device_id)
-    const order = await show_inorder(order_id)
-    const devices = order["device_id"]
-    var payload = {
-        notification: {
-            title: `ORDER UPDATE`,
-            body: `Hey, Your Order ${order_id} has been cancelled. Sorry for the inconvenience`
-        }
-    }
-    sendNotificationToDevices(devices, payload)
-    if(updated_order != undefined){
-        res.json({
-            "message": "Order status updated succesfully",
-            "status": 200
-        })
-    } else {
-        res.json({
-            "status": 500,
-            "message": "Could not update order"
-        })
-    }
-}
+  const order_id = req.body["order_id"];
+  const device_id = req.body["device_id"];
+  const updated_by = res.locals["user_id"];
+  const updated_order = await update_inorder(
+    order_id,
+    5,
+    updated_by,
+    device_id
+  );
+  const order = await show_inorder(order_id);
+  const devices = order["device_id"];
+  var payload = {
+    notification: {
+      title: `ORDER UPDATE`,
+      body: `Hey, Your Order ${order_id} has been cancelled. Sorry for the inconvenience`,
+    },
+  };
+  sendNotificationToDevices(devices, payload);
+  if (updated_order != undefined) {
+    res.json({
+      message: "Order status updated succesfully",
+      status: 200,
+    });
+  } else {
+    res.json({
+      status: 500,
+      message: "Could not update order",
+    });
+  }
+};
 
 const serve_order_controller = async (req, res, next) => {
-    const order_id = req.body["order_id"]
-    const updated_by = res.locals["user_id"]
-    const device_id = req.body["device_id"]
-    const updated_order = await update_inorder(order_id, 3, updated_by, device_id)
-    const order = await show_inorder(order_id)
-    const devices = order["device_id"]
-    var payload = {
-        notification: {
-            title: `ORDER PREPARED`,
-            body: `Hurray, Your Order ${order_id} is prepared now. Enjoy for food. Happy Dining.`
-        }
-    }
-    sendNotificationToDevices(devices, payload).then((response)=>{
-        console.log(JSON.stringify(response))
-    })
-    if(updated_order != undefined){
-        res.json({
-            "message": "Order status updated succesfully",
-            "status": 200
-        })
-    } else {
-        res.json({
-            "status": 500,
-            "message": "Could not update order"
-        })
-    }
-}
+  const order_id = req.body["order_id"];
+  const updated_by = res.locals["user_id"];
+  const device_id = req.body["device_id"];
+  const updated_order = await update_inorder(
+    order_id,
+    3,
+    updated_by,
+    device_id
+  );
+  const order = await show_inorder(order_id);
+  const devices = order["device_id"];
+  var payload = {
+    notification: {
+      title: `ORDER PREPARED`,
+      body: `Hurray, Your Order ${order_id} is prepared now. Enjoy for food. Happy Dining.`,
+    },
+  };
+  sendNotificationToDevices(devices, payload).then((response) => {
+    console.log(JSON.stringify(response));
+  });
+  if (updated_order != undefined) {
+    res.json({
+      message: "Order status updated succesfully",
+      status: 200,
+    });
+  } else {
+    res.json({
+      status: 500,
+      message: "Could not update order",
+    });
+  }
+};
 
 const finish_inorder_controller = async (req, res, next) => {
-    const order_id = req.body["order_id"]
-    const amount = req.body["amount"]
-    const mode = req.body["mode"]
-    const inorder = await show_inorder(order_id)
-    const order = await show_inorder(order_id)
-    const devices = order["device_id"]
-    var payload = {
-        notification: {
-            title: `ORDER COMPLETION`,
-            body: `Thank you, ${order["name"]} for dining with us`
-        }
-    }
-    sendNotificationToDevices(devices, payload)
-    if(inorder != {} && inorder != undefined){
-        if(inorder["is_paid"] != true){
-            const finished_inorder = await finish_inorder(order_id, amount, mode)
-            if(finished_inorder["ok"]){
-                res.json({
-                    "message": "Order completed successfully",
-                    "status": 200
-                })
-            } else {
-                res.status(500)
-                res.json({
-                    "message": "Failed to complete inorder. Try again",
-                    "status": 500
-                })
-            }
-        } else {
-            res.status(404)
-            res.json({
-                "message": "Could not find the inorder",
-                "status": 404
-            })
-        }
-    } else {
-        res.status(400)
+  const order_id = req.body["order_id"];
+  const amount = req.body["amount"];
+  const mode = req.body["mode"];
+  const inorder = await show_inorder(order_id);
+  const order = await show_inorder(order_id);
+  const devices = order["device_id"];
+  var payload = {
+    notification: {
+      title: `ORDER COMPLETION`,
+      body: `Thank you, ${order["name"]} for dining with us`,
+    },
+  };
+  sendNotificationToDevices(devices, payload);
+  if (inorder != {} && inorder != undefined) {
+    if (inorder["is_paid"] != true) {
+      const finished_inorder = await finish_inorder(order_id, amount, mode);
+      if (finished_inorder["ok"]) {
         res.json({
-            "message": "Could not find the inorder",
-            "status": 404
-        })
+          message: "Order completed successfully",
+          status: 200,
+        });
+      } else {
+        res.status(500);
+        res.json({
+          message: "Failed to complete inorder. Try again",
+          status: 500,
+        });
+      }
+    } else {
+      res.status(404);
+      res.json({
+        message: "Could not find the inorder",
+        status: 404,
+      });
     }
-}
+  } else {
+    res.status(400);
+    res.json({
+      message: "Could not find the inorder",
+      status: 404,
+    });
+  }
+};
 
 const generate_inorder_token = async (req, res, next) => {
-    const restaurant_id = req.body["restaurant_id"]
-    const user = res.locals["user"]
-    const user_id = res.locals.user_id
-    const table_no = req.body["table_no"]
-    const offer_code = req.body["offer_code"]
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    const new_token = await create_inorder_token(restaurant_id, table_no, offer_code, user, ip, user_id)
-    const analytics_document = add_analytics(restaurant_id, "scans", user_id)
-    if(new_token["_id"] != undefined){
-        res.json({
-            "token": new_token["token"],
-            "expiry": new_token["expiry"],
-            "status": 200
-        })
-    } else {
-        res.status(500)
-        res.json({
-            "message": "Unable to create credentials",
-            "status": 500
-        })
-    }
-}
+  const restaurant_id = req.body["restaurant_id"];
+  const user = res.locals["user"];
+  const user_id = res.locals.user_id;
+  const table_no = req.body["table_no"];
+  const offer_code = req.body["offer_code"];
+  const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+  const new_token = await create_inorder_token(
+    restaurant_id,
+    table_no,
+    offer_code,
+    user,
+    ip,
+    user_id
+  );
+  const analytics_document = add_analytics(restaurant_id, "scans", user_id);
+  if (new_token["_id"] != undefined) {
+    res.json({
+      token: new_token["token"],
+      expiry: new_token["expiry"],
+      status: 200,
+    });
+  } else {
+    res.status(500);
+    res.json({
+      message: "Unable to create credentials",
+      status: 500,
+    });
+  }
+};
 
 const validate_inorder_token_controller = async (req, res, next) => {
-    try {
-        const token = req.headers["x-mazon-token"]
-        const user = res.locals["user"]
-        const restaurant_id = req.body["restaurant_id"]
-        console.log(restaurant_id)
-        const user_document = await get_user_details_by_email(user)
-        if(user_document != null){
-            const token_document = await validate_inorder_token(token, user, restaurant_id)
-            if(token_document){
-                res.locals["inorder-token"] = token
-                next()
-            } else {
-                res.json({
-                    "message": "Invalid credentials",
-                    "status": 401
-                })
-            }
-        } else {
-            res.status(403)
-            res.json({
-                "message": "Forbidden",
-                "status": 403
-            })
-        }
-    } catch (error) {
+  try {
+    const token = req.headers["x-mazon-token"];
+    const user = res.locals["user"];
+    const restaurant_id = req.body["restaurant_id"];
+    console.log(restaurant_id);
+    const user_document = await get_user_details_by_email(user);
+    if (user_document != null) {
+      const token_document = await validate_inorder_token(
+        token,
+        user,
+        restaurant_id
+      );
+      if (token_document) {
+        res.locals["inorder-token"] = token;
+        next();
+      } else {
         res.json({
-            "message": "Invalid credentials",
-            "status": 401
-        })
+          message: "Invalid credentials",
+          status: 401,
+        });
+      }
+    } else {
+      res.status(403);
+      res.json({
+        message: "Forbidden",
+        status: 403,
+      });
     }
-}
+  } catch (error) {
+    res.json({
+      message: "Invalid credentials",
+      status: 401,
+    });
+  }
+};
 
 const validate_waiter_inorder_token_controller = async (req, res, next) => {
-    try {
-        const token = req.headers["x-mazon-token"]
-        const user = req.body["email"]
-        const restaurant_id = req.body["restaurant_id"]
-            const token_document = await validate_inorder_token(token, user, restaurant_id)
-            if(token_document){
-                res.locals["inorder-token"] = token
-                next()
-            } else {
-                res.json({
-                    "message": "Invalid credentials",
-                    "status": 401
-                })
-            }
-    } catch (error) {
-        res.json({
-            "message": "Invalid credentials",
-            "status": 401
-        })
+  try {
+    const token = req.headers["x-mazon-token"];
+    const user = req.body["email"];
+    const restaurant_id = req.body["restaurant_id"];
+    const token_document = await validate_inorder_token(
+      token,
+      user,
+      restaurant_id
+    );
+    if (token_document) {
+      res.locals["inorder-token"] = token;
+      next();
+    } else {
+      res.json({
+        message: "Invalid credentials",
+        status: 401,
+      });
     }
-}
+  } catch (error) {
+    res.json({
+      message: "Invalid credentials",
+      status: 401,
+    });
+  }
+};
 
 module.exports = {
-    "calculate_amount": calculate_menu_amount,
-    "confirm_order": confirm_order_controller,
-    "cancel_order": cancel_order_controller,
-    "serve_order": serve_order_controller,
-    "finish_order": finish_inorder_controller,
-    "place_inorder": place_inorder_controller,
-    "generate_token": generate_inorder_token,
-    "validate_token": validate_inorder_token_controller,
-    "check_order": check_inorder_validity,
-    "get_order_summary": get_order_summary,
-    "get_weekly_analytics": get_weekly_inorders_data,
-    "waiter_token_validation": validate_waiter_inorder_token_controller,
-    get_order_amount
-}
+  calculate_amount: calculate_menu_amount,
+  confirm_order: confirm_order_controller,
+  cancel_order: cancel_order_controller,
+  serve_order: serve_order_controller,
+  finish_order: finish_inorder_controller,
+  place_inorder: place_inorder_controller,
+  generate_token: generate_inorder_token,
+  validate_token: validate_inorder_token_controller,
+  check_order: check_inorder_validity,
+  get_order_summary: get_order_summary,
+  get_weekly_analytics: get_weekly_inorders_data,
+  waiter_token_validation: validate_waiter_inorder_token_controller,
+  get_order_amount,
+};
